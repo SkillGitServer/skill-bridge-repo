@@ -1,0 +1,19 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src * 'self' data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://translate.google.com https://*.googleapis.com; connect-src * 'self' blob: data: https://*; style-src * 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src * 'self' data: https://fonts.gstatic.com; img-src * 'self' data: blob: https://*; frame-src * 'self' https://accounts.google.com;"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

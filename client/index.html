@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skill Bridge India</title>
+    <!-- Dynamic PWA Manifest & Icon Loader -->
+    <script>
+      (function() {
+        var p = window.location.pathname;
+        var m = null;
+        var icon = '/logo.png';
+        if (p.indexOf('/admin') === 0) {
+          m = '/manifest-admin.json';
+          icon = '/adm-icon.png';
+        } else if (p.indexOf('/sudo-control-panel') === 0 || p.indexOf('/super-admin') === 0 || p.indexOf('/super_admin') === 0) {
+          m = '/manifest-superadmin.json';
+          icon = '/sup-icon.png';
+        } else if (p.indexOf('/student') === 0 || p.indexOf('/register') === 0 || p.indexOf('/login') === 0 || p.indexOf('/dashboard') === 0) {
+          m = '/manifest-student.json';
+          icon = '/stu-icon.png';
+        }
+        
+        if (m) {
+          var l = document.createElement('link');
+          l.rel = 'manifest';
+          l.href = m;
+          l.id = 'pwa-manifest-link';
+          document.head.appendChild(l);
+        }
+
+        var fav = document.createElement('link');
+        fav.rel = 'icon';
+        fav.type = 'image/png';
+        fav.href = icon;
+        fav.id = 'pwa-favicon-link';
+        document.head.appendChild(fav);
+
+        var touch = document.createElement('link');
+        touch.rel = 'apple-touch-icon';
+        touch.href = icon;
+        touch.id = 'pwa-apple-touch-link';
+        document.head.appendChild(touch);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="google_translate_element" style="display:none;"></div>
+    <div id="root"></div>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="text/javascript">
+      // Kill Vercel Toolbar & Feedback overlays if injected
+      (function() {
+        const removeVercelToolbar = () => {
+          const targets = document.querySelectorAll('#vercel-toolbar, [data-vercel-toolbar-root], [data-vercel-edit-mode-root], #vercel-live-feedback, div[id*="vercel-toolbar"]');
+          targets.forEach(el => el.remove());
+        };
+        const observer = new MutationObserver(removeVercelToolbar);
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        window.addEventListener('DOMContentLoaded', removeVercelToolbar);
+      })();
+
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,mr', autoDisplay: false}, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

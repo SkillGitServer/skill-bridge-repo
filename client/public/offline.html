@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline | Skill Bridge India</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="shortcut icon" href="/logo.png" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at top center, #1e1b4b 0%, #090d16 60%, #030712 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Background Glows */
+    .glow-blob-1 {
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 300px;
+      height: 300px;
+      background: rgba(99, 102, 241, 0.15);
+      filter: blur(100px);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: pulse 6s infinite alternate;
+    }
+
+    .glow-blob-2 {
+      position: absolute;
+      bottom: 20%;
+      right: 20%;
+      width: 250px;
+      height: 250px;
+      background: rgba(236, 72, 153, 0.12);
+      filter: blur(90px);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: pulse 8s infinite alternate-reverse;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1) translateY(0); opacity: 0.5; }
+      100% { transform: scale(1.2) translateY(-20px); opacity: 0.9; }
+    }
+
+    .container {
+      max-width: 520px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand-logo {
+      height: 48px;
+      margin-bottom: 24px;
+      object-fit: contain;
+    }
+
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 0 40px rgba(239, 68, 68, 0.15);
+    }
+
+    .icon-wrapper svg {
+      width: 40px;
+      height: 40px;
+      stroke: #f87171;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #ef4444;
+      border-radius: 50%;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .btn-retry {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+      color: #ffffff;
+      border: none;
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-retry:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+
+    .btn-retry:active {
+      transform: translateY(0);
+    }
+
+    /* Mini Skill Challenge Section */
+    .game-section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: left;
+    }
+
+    .game-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .game-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .question-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .option-btn.correct {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: #10b981 !important;
+      color: #34d399 !important;
+    }
+
+    .option-btn.wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-blob-1"></div>
+  <div class="glow-blob-2"></div>
+
+  <div class="container">
+    <img src="/logo.png" alt="Skill Bridge India Logo" class="brand-logo" />
+
+    <div class="icon-wrapper">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a5 5 0 010-7.072m0 0L5.636 5.636m12.728 0L3 21" />
+      </svg>
+    </div>
+
+    <h1>You Are Offline</h1>
+    <p class="subtitle">
+      It looks like your internet connection is down. Don't worry, Skill Bridge India will automatically reconnect once you're back online!
+    </p>
+
+    <div class="status-pill" id="statusPill">
+      <span class="dot"></span>
+      <span id="statusText">No Internet Connection</span>
+    </div>
+
+    <button class="btn-retry" id="retryBtn" onclick="checkConnection()">
+      <span class="spinner" id="btnSpinner"></span>
+      <span id="btnText">🔄 Check Connection & Retry</span>
+    </button>
+
+    <!-- Mini Offline Challenge -->
+    <div class="game-section">
+      <div class="game-title">
+        <span>🧠 Offline Skill Booster Quiz</span>
+        <span id="scoreText" style="color: #6366f1;">Score: 0/5</span>
+      </div>
+
+      <div class="game-card" id="gameCard">
+        <div class="question-text" id="qText">Loading offline quiz...</div>
+        <div class="options-grid" id="optionsGrid"></div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Skill Bridge India · Offline Access System
+    </div>
+  </div>
+
+  <script>
+    // Network status listener
+    window.addEventListener('online', () => {
+      document.getElementById('statusText').innerText = 'Connection Restored! Reloading...';
+      document.getElementById('statusPill').style.background = 'rgba(16, 185, 129, 0.2)';
+      document.getElementById('statusPill').style.color = '#34d399';
+      setTimeout(() => window.location.reload(), 1000);
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('statusText').innerText = 'No Internet Connection';
+      document.getElementById('statusPill').style.background = 'rgba(239, 68, 68, 0.15)';
+      document.getElementById('statusPill').style.color = '#fca5a5';
+    });
+
+    async function checkConnection() {
+      const btnText = document.getElementById('btnText');
+      const spinner = document.getElementById('btnSpinner');
+      btnText.innerText = 'Checking...';
+      spinner.style.display = 'inline-block';
+
+      try {
+        const res = await fetch('/favicon.svg?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) {
+          btnText.innerText = 'Connected! Reloading...';
+          window.location.reload();
+          return;
+        }
+      } catch (e) {
+        // Still offline
+      }
+
+      setTimeout(() => {
+        spinner.style.display = 'none';
+        btnText.innerText = 'Still Offline — Retry';
+      }, 1000);
+    }
+
+    // 6-Subject Question Banks Pool for Standalone Offline Shell Page
+    const SUBJECT_POOLS = {
+      "Aptitude": [
+        { q: "A person bought an item at 20% discount and sold it at a 25% profit. What % of profit was made by the person from the listed price?", options: ["20%", "25%", "30%", "35%"], ans: 1 },
+        { q: "A certain amount invested at 12% per annum simple interest for 3 years gives ₹720. What was the principal?", options: ["₹1000", "₹2000", "₹3000", "₹4000"], ans: 1 },
+        { q: "A train moving at 120 km/hr and freight train moving at 50 km/hr start together. When are they 300 km apart?", options: ["2 hours", "4 hours", "6 hours", "8 hours"], ans: 2 },
+        { q: "A salary increased by 20% and then reduced by 10%. Net change in salary?", options: ["6% decrease", "8% increase", "10% decrease", "12% increase"], ans: 1 }
+      ],
+      "Behaviour & Personality": [
+        { q: "When receiving constructive criticism from a team member, what is the most professional response?", options: ["Ignore it", "Defend immediately", "Listen actively and evaluate objectively", "Argue back"], ans: 2 },
+        { q: "Which trait best reflects high emotional intelligence (EQ) in leadership?", options: ["Strict control", "Empathy & self-awareness", "Avoiding conflict", "Ignoring feedback"], ans: 1 },
+        { q: "How should an employee handle a sudden project deadline shift?", options: ["Complain to peers", "Prioritize tasks & communicate with manager", "Refuse the work", "Quit project"], ans: 1 }
+      ],
+      "Communication": [
+        { q: "What is the main advantage of active listening in a conversation?", options: ["To express your opinion", "To dominate conversation", "To fully understand speaker's perspective", "To remember every word"], ans: 2 },
+        { q: "Which element is crucial for effective written business communication?", options: ["Complex jargon", "Clarity and conciseness", "Long paragraphs", "Informal slang"], ans: 1 },
+        { q: "What does 'nonverbal communication' primarily include?", options: ["Written emails", "Body language & eye contact", "Phone calls", "Audio recordings"], ans: 1 }
+      ],
+      "Problem Solving": [
+        { q: "What is the first step in the formal problem-solving process?", options: ["Implement solution", "Define & identify the problem", "Brainstorm options", "Evaluate results"], ans: 1 },
+        { q: "What does 'root cause analysis' aim to achieve?", options: ["Fix superficial symptoms", "Find underlying core cause", "Assign personal blame", "Delay decision"], ans: 1 },
+        { q: "Which technique helps break down a complex system into manageable sub-problems?", options: ["Decomposition", "Recursion limit", "Hardcoding", "Brute force"], ans: 0 }
+      ],
+      "Situational Judgment": [
+        { q: "You notice a critical typo in a client report 10 minutes before presentation. What should you do?", options: ["Cancel presentation", "Notify team & correct slide immediately", "Blame colleague", "Hope nobody notices"], ans: 1 },
+        { q: "Two senior team members disagree on architectural direction. How do you facilitate?", options: ["Side with senior-most", "Evaluate options based on metrics & alignment", "Flip a coin", "Ignore conflict"], ans: 1 }
+      ],
+      "Workplace Skills": [
+        { q: "What is the primary benefit of Agile methodology in software development?", options: ["No documentation", "Iterative delivery & adaptability", "Zero meetings", "Single release at end"], ans: 1 },
+        { q: "Which tool parameter controls version tracking in Git?", options: ["git status", "git log / commit", "git push --force", "git init"], ans: 1 },
+        { q: "What is the purpose of time-blocking in daily workload management?", options: ["Block internet", "Schedule dedicated focus blocks for priority tasks", "Restrict break time", "Automate emails"], ans: 1 }
+      ]
+    };
+
+    let activeQuestions = [];
+    let currentQ = 0;
+    let score = 0;
+
+    function init6SubjectQuiz() {
+      activeQuestions = Object.keys(SUBJECT_POOLS).map(subject => {
+        const pool = SUBJECT_POOLS[subject];
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        return { subject, ...item };
+      });
+      currentQ = 0;
+      score = 0;
+      document.getElementById('scoreText').innerText = `Score: 0/6`;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (currentQ >= activeQuestions.length) {
+        document.getElementById('qText').innerHTML = `<div style="text-align:center; padding:10px;">🏆 <strong>6-Subject Quiz Completed!</strong><br/><span style="font-size:12px; color:#cbd5e1; display:block; margin-top:4px;">You scored <strong>${score} out of 6</strong> points offline.</span></div>`;
+        document.getElementById('optionsGrid').innerHTML = `
+          <button class="option-btn" style="text-align: center; font-weight: bold; background: rgba(99,102,241,0.25); color: #fff;" onclick="init6SubjectQuiz()">
+            📚 Play New 6-Subject Quiz
+          </button>
+        `;
+        return;
+      }
+
+      const item = activeQuestions[currentQ];
+      document.getElementById('qText').innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:10px; font-weight:800; text-transform:uppercase; background:rgba(99,102,241,0.2); color:#818cf8; padding:3px 10px; border-radius:100px; border:1px solid rgba(99,102,241,0.3);">${item.subject}</span>
+          <span style="font-size:10px; color:#94a3b8; font-weight:700;">Question ${currentQ + 1} of 6</span>
+        </div>
+        ${item.q}
+      `;
+
+      const grid = document.getElementById('optionsGrid');
+      grid.innerHTML = '';
+
+      item.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => handleAnswer(idx, item.ans, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selected, correct, btnEl) {
+      const btns = document.querySelectorAll('.option-btn');
+      btns.forEach(b => b.disabled = true);
+
+      if (selected === correct) {
+        btnEl.classList.add('correct');
+        score++;
+        document.getElementById('scoreText').innerText = `Score: ${score}/6`;
+      } else {
+        btnEl.classList.add('wrong');
+        if (btns[correct]) btns[correct].classList.add('correct');
+      }
+
+      setTimeout(() => {
+        currentQ++;
+        renderQuestion();
+      }, 1300);
+    }
+
+    function restartQuiz() {
+      init6SubjectQuiz();
+    }
+
+    // Init Quiz on page load
+    init6SubjectQuiz();
+  </script>
+</body>
+</html>
