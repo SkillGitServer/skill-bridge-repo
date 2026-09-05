@@ -39,4 +39,8 @@
     }]
     
   </string>  
+  <string name="appDescription">Super Admin Control Panel</string>
+  <string name="biometricTitle">Supss Security Verification</string>
+  <string name="biometricSubtitle">Super Admin Control Panel</string>
+  <string name="biometricDesc">Scan fingerprint or enter device PIN to unlock super admin control panel.</string>
 </resources>

@@ -37,11 +37,21 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/appName"
-        
+        android:description="@string/appDescription"
         android:manageSpaceActivity="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
-        
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Translucent.NoTitleBar">
+
+        <activity
+            android:name=".BiometricAuthActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:exported="true"
+            android:label="@string/launcherName">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <meta-data
             android:name="asset_statements"
@@ -142,10 +152,7 @@
 
             
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
 
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>

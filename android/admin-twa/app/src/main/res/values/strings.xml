@@ -39,4 +39,8 @@
     }]
     
   </string>  
+  <string name="appDescription">Institute Admin Portal</string>
+  <string name="biometricTitle">Vault Security Verification</string>
+  <string name="biometricSubtitle">Institute Admin Portal</string>
+  <string name="biometricDesc">Scan fingerprint or enter device PIN to unlock admin controls.</string>
 </resources>
