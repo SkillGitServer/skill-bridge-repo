@@ -3,7 +3,7 @@
   "host": "skill-bridge-india.bot.cd",
   "name": "Supss",
   "launcherName": "Supss",
-  "display": "fullscreen",
+  "display": "standalone",
   "themeColor": "#111111",
   "themeColorDark": "#000000",
   "navigationColor": "#111111",
@@ -34,7 +34,11 @@
   "isMetaQuest": false,
   "minSdkVersion": 21,
   "orientation": "default",
-  "fingerprints": [],
+  "fingerprints": [
+    {
+      "value": "DB:61:46:CD:B8:56:B5:D0:EC:D1:B2:1E:A8:97:50:DB:E6:0A:A2:50:68:F8:FF:E6:B9:C8:95:ED:9A:1B:6B:A4"
+    }
+  ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],

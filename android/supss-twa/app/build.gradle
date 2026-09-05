@@ -48,6 +48,7 @@ def twaManifest = [
     fallbackType: 'customtabs',
     enableSiteSettingsShortcut: 'true',
     orientation: 'default',
+    displayMode: 'standalone',
 ]
 
 android {

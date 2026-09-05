@@ -3,7 +3,7 @@
   "host": "skill-bridge-india.bot.cd",
   "name": "Vault",
   "launcherName": "Vault",
-  "display": "fullscreen",
+  "display": "standalone",
   "themeColor": "#FFFFFF",
   "themeColorDark": "#000000",
   "navigationColor": "#FFFFFF",
@@ -34,7 +34,11 @@
   "isMetaQuest": false,
   "minSdkVersion": 21,
   "orientation": "default",
-  "fingerprints": [],
+  "fingerprints": [
+    {
+      "value": "69:4A:F9:46:1C:41:14:BB:E5:4F:AB:52:E7:50:F3:4C:3C:53:A2:EE:9A:3B:12:98:4B:70:AC:39:A8:86:F0:DB"
+    }
+  ],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
