@@ -12,9 +12,16 @@ import java.util.concurrent.Executor;
 
 public class BiometricAuthActivity extends AppCompatActivity {
 
+    private boolean isAuthenticated = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null && savedInstanceState.getBoolean("isAuthenticated", false)) {
+            launchTWA();
+            return;
+        }
 
         BiometricManager biometricManager = BiometricManager.from(this);
         int authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
@@ -25,6 +32,12 @@ public class BiometricAuthActivity extends AppCompatActivity {
         } else {
             launchTWA();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("isAuthenticated", isAuthenticated);
     }
 
     private void promptBiometricAuth() {
@@ -43,6 +56,7 @@ public class BiometricAuthActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
+                isAuthenticated = true;
                 launchTWA();
             }
 
@@ -64,11 +78,19 @@ public class BiometricAuthActivity extends AppCompatActivity {
 
     private void launchTWA() {
         Intent intent = new Intent(this, LauncherActivity.class);
-        if (getIntent() != null && getIntent().getData() != null) {
-            intent.setData(getIntent().getData());
+        if (getIntent() != null) {
+            if (getIntent().getData() != null) {
+                intent.setData(getIntent().getData());
+            }
+            if (getIntent().getExtras() != null) {
+                intent.putExtras(getIntent().getExtras());
+            }
+            if (getIntent().getAction() != null) {
+                intent.setAction(getIntent().getAction());
+            }
         }
-        intent.addFlags(Intent.FLAG_ACTIVITY_FORWARD_RESULT | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
+        overridePendingTransition(0, 0);
         finish();
     }
 }

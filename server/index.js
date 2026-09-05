@@ -17,6 +17,13 @@ const landingRoutes = require('./routes/landingRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 
 const app = express();
+const path = require('path');
+
+// Digital Asset Links for Android TWAs
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.sendFile(path.join(__dirname, '../client/public/.well-known/assetlinks.json'));
+});
 
 // Middleware
 app.use(cors());
