@@ -28,7 +28,7 @@ export function ApkDownloadMenu() {
       name: 'Spark App (APK)',
       badge: 'Student Portal',
       filename: 'Skill-Bridge-Spark.apk',
-      path: '/downloads/spark.apk',
+      path: '/downloads/Spark.apk',
       icon: stuIcon,
       color: 'from-blue-500 to-indigo-600'
     },
@@ -37,7 +37,7 @@ export function ApkDownloadMenu() {
       name: 'Vault App (APK)',
       badge: 'Mentor Portal',
       filename: 'Skill-Bridge-Vault.apk',
-      path: '/downloads/vault.apk',
+      path: '/downloads/Vault.apk',
       icon: admIcon,
       color: 'from-purple-500 to-pink-600'
     },
@@ -46,7 +46,7 @@ export function ApkDownloadMenu() {
       name: 'SUPSS App (APK)',
       badge: 'Super Admin',
       filename: 'Skill-Bridge-SUPSS.apk',
-      path: '/downloads/supss.apk',
+      path: '/downloads/Supss.apk',
       icon: supIcon,
       color: 'from-emerald-500 to-teal-600'
     }
