@@ -41,21 +41,42 @@ const handleChatAsk = async (req, res) => {
       formattedMessages.push({ role: 'user', content: userPrompt.trim() });
     }
 
-    const groqResponse = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        model: 'llama-3.1-8b-instant',
-        messages: formattedMessages,
-        temperature: 0.5,
-        max_tokens: 250
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+    const GROQ_MODELS = ['groq/compound-mini', 'groq/compound', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    let groqResponse;
+    let lastErr;
+
+    for (const modelCandidate of GROQ_MODELS) {
+      try {
+        groqResponse = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            model: modelCandidate,
+            messages: formattedMessages,
+            temperature: 0.5,
+            max_tokens: 250
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        if (groqResponse && groqResponse.data?.choices?.[0]?.message) {
+          break; // Success!
+        }
+      } catch (mErr) {
+        lastErr = mErr;
+        const errStatus = mErr.response?.status;
+        if (errStatus === 401 || errStatus === 403 || errStatus === 429) {
+          throw mErr; // Auth / Quota error -> stop trying other models
         }
       }
-    );
+    }
+
+    if (!groqResponse && lastErr) {
+      throw lastErr;
+    }
 
     const aiReply = groqResponse.data?.choices?.[0]?.message?.content || "I'm having trouble connecting right now, please try again.";
 

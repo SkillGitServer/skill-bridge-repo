@@ -206,15 +206,38 @@ const handlePostRetentionSettings = async (req, res) => {
 const handleGetGroqKeys = async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
+    const chatVal = (settings.chatGroqKey || settings.activeGroqChatApiKey || '').trim();
+    const resumeVal = (settings.resumeGroqKey || settings.activeGroqResumeApiKey || '').trim();
+
+    const formatMask = (val) => {
+      if (!val) return 'Environment Default';
+      if (val.length > 8) {
+        return `${val.substring(0, 4)}...${val.substring(val.length - 4)}`;
+      }
+      return 'gsk_****';
+    };
+
     return res.status(200).json({
-      chatKey: { masked: settings.chatGroqKey ? 'gsk_****' : 'Environment Default', hasCustomKey: Boolean(settings.chatGroqKey), source: settings.chatGroqKey ? 'custom' : 'environment', keyLength: settings.chatGroqKey ? settings.chatGroqKey.length : 0 },
-      resumeKey: { masked: settings.resumeGroqKey ? 'gsk_****' : 'Environment Default', hasCustomKey: Boolean(settings.resumeGroqKey), source: settings.resumeGroqKey ? 'custom' : 'environment', keyLength: settings.resumeGroqKey ? settings.resumeGroqKey.length : 0 },
+      chatKey: {
+        masked: formatMask(chatVal),
+        hasCustomKey: Boolean(chatVal),
+        source: chatVal ? 'custom' : 'environment',
+        keyLength: chatVal.length,
+        status: settings.chatKeyStatus || 'active'
+      },
+      resumeKey: {
+        masked: formatMask(resumeVal),
+        hasCustomKey: Boolean(resumeVal),
+        source: resumeVal ? 'custom' : 'environment',
+        keyLength: resumeVal.length,
+        status: settings.resumeKeyStatus || 'active'
+      },
       updatedAt: settings.updatedAt
     });
   } catch (err) {
     return res.status(200).json({
-      chatKey: { masked: '', hasCustomKey: false, source: 'environment', keyLength: 0 },
-      resumeKey: { masked: '', hasCustomKey: false, source: 'environment', keyLength: 0 },
+      chatKey: { masked: 'Environment Default', hasCustomKey: false, source: 'environment', keyLength: 0, status: 'active' },
+      resumeKey: { masked: 'Environment Default', hasCustomKey: false, source: 'environment', keyLength: 0, status: 'active' },
       updatedAt: null
     });
   }
@@ -224,11 +247,22 @@ const handlePostGroqKeys = async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
     const { targetKey, activeGroqApiKey } = req.body;
-    if (targetKey === 'chat') settings.chatGroqKey = activeGroqApiKey || '';
-    if (targetKey === 'resume') settings.resumeGroqKey = activeGroqApiKey || '';
+    const cleanKey = (activeGroqApiKey || '').trim();
+
+    if (targetKey === 'chat') {
+      settings.chatGroqKey = cleanKey;
+      settings.activeGroqChatApiKey = cleanKey;
+      settings.chatKeyStatus = 'active';
+    }
+    if (targetKey === 'resume') {
+      settings.resumeGroqKey = cleanKey;
+      settings.activeGroqResumeApiKey = cleanKey;
+      settings.resumeKeyStatus = 'active';
+    }
     await settings.save();
     return res.status(200).json({ success: true, message: 'Groq AI API Key updated successfully!' });
   } catch (err) {
+    console.error('Error in handlePostGroqKeys:', err);
     return res.status(500).json({ error: 'Failed to update Groq API key.' });
   }
 };

@@ -66,15 +66,15 @@ const analyzeResumeAi = async (req, res) => {
       return res.status(400).json({ error: 'The uploaded PDF appears to be empty or unscannable (scanned images only).' });
     }
 
-    // Request Groq Chat Completion
-    const groqResponse = await axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
+    // Request Groq Chat Completion with resilient model fallback
+    const GROQ_MODELS = ['groq/compound-mini', 'groq/compound', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    let groqResponse;
+    let lastErr;
+
+    const payloadMessages = [
       {
-        model: 'llama-3.1-8b-instant',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert ATS resume reviewer. Analyze the resume text and return a JSON object with: 1. score (number out of 100), 2. metrics (array of objects with { name, value, color }), 3. suggestions (array of objects with { id, type, text, badgeColor, dotColor }). Suggestion types should be "Action Required", "Warning", or "Good". Ensure badgeColor matches "bg-red-50 text-red-700 border-red-100" for Action Required, "bg-orange-50 text-orange-700 border-orange-100" for Warning, and "bg-green-50 text-green-700 border-green-100" for Good. Corresponding dotColor should be "bg-red-500", "bg-orange-500", or "bg-green-500" respectively. Ensure color for metrics is "bg-green-500", "bg-orange-500", or "bg-amber-500".
+        role: 'system',
+        content: `You are an expert ATS resume reviewer. Analyze the resume text and return a JSON object with: 1. score (number out of 100), 2. metrics (array of objects with { name, value, color }), 3. suggestions (array of objects with { id, type, text, badgeColor, dotColor }). Suggestion types should be "Action Required", "Warning", or "Good". Ensure badgeColor matches "bg-red-50 text-red-700 border-red-100" for Action Required, "bg-orange-50 text-orange-700 border-orange-100" for Warning, and "bg-green-50 text-green-700 border-green-100" for Good. Corresponding dotColor should be "bg-red-500", "bg-orange-500", or "bg-green-500" respectively. Ensure color for metrics is "bg-green-500", "bg-orange-500", or "bg-amber-500".
 
 CRITICAL RULE:
 Compare the user's site profile name ("${student.name}") with the name you detect on their resume.
@@ -82,21 +82,44 @@ Compare the user's site profile name ("${student.name}") with the name you detec
 - If they do not match, or if the resume name is missing, add an "Action Required" or "Warning" suggestion saying exactly: "In your site registration, your name is ${student.name}, but in the resume it appears as [found name or missing]. It could have been better if you updated it to ensure consistency."
 
 Respond ONLY with the raw JSON object, without markdown blocks.`
-          },
-          {
-            role: 'user',
-            content: `Student Site Name: ${student.name}\n\nResume Text:\n${resumeText}`
-          }
-        ],
-        response_format: { type: 'json_object' }
       },
       {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+        role: 'user',
+        content: `Student Site Name: ${student.name}\n\nResume Text:\n${resumeText}`
+      }
+    ];
+
+    for (const modelCandidate of GROQ_MODELS) {
+      try {
+        groqResponse = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            model: modelCandidate,
+            messages: payloadMessages,
+            response_format: { type: 'json_object' }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        if (groqResponse && groqResponse.data?.choices?.[0]?.message) {
+          break;
+        }
+      } catch (mErr) {
+        lastErr = mErr;
+        const errStatus = mErr.response?.status;
+        if (errStatus === 401 || errStatus === 403 || errStatus === 429) {
+          throw mErr;
         }
       }
-    );
+    }
+
+    if (!groqResponse && lastErr) {
+      throw lastErr;
+    }
 
     // On success, reset resumeKeyStatus to active
     updateResumeKeyStatus('active');
