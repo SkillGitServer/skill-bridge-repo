@@ -18,11 +18,31 @@ const jobRoutes = require('./routes/jobRoutes');
 
 const app = express();
 const path = require('path');
+const fs = require('fs');
 
 // Digital Asset Links for Android TWAs
 app.get('/.well-known/assetlinks.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.sendFile(path.join(__dirname, '../client/public/.well-known/assetlinks.json'));
+});
+
+// Serve Android APK downloads directly from android project folder
+const androidDir = path.join(__dirname, '../android');
+app.get('/downloads/:apkName', (req, res) => {
+  const name = req.params.apkName.toLowerCase();
+  let apkPath = null;
+  if (name.includes('spark')) {
+    apkPath = path.join(androidDir, 'sparks-twa/Sparks-release-signed.apk');
+  } else if (name.includes('vault')) {
+    apkPath = path.join(androidDir, 'vault-twa/Vault-release-signed.apk');
+  } else if (name.includes('supss')) {
+    apkPath = path.join(androidDir, 'supss-twa/Supss-release-signed.apk');
+  }
+  if (apkPath && fs.existsSync(apkPath)) {
+    res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+    return res.sendFile(apkPath);
+  }
+  res.status(404).send('APK not found');
 });
 
 // Middleware
