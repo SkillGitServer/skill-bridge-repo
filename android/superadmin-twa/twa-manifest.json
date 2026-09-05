@@ -1,0 +1,42 @@
+{
+  "packageId": "cd.bot.skillbridge.superadmin",
+  "host": "skill-bridge-india.bot.cd",
+  "name": "Supss",
+  "launcherName": "Supss",
+  "display": "fullscreen",
+  "themeColor": "#111111",
+  "themeColorDark": "#000000",
+  "navigationColor": "#111111",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#111111",
+  "enableNotifications": true,
+  "startUrl": "/sudo-control-panel",
+  "iconUrl": "https://skill-bridge-india.bot.cd/sup-icon.png",
+  "maskableIconUrl": "https://skill-bridge-india.bot.cd/sup-icon.png",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://skill-bridge-india.bot.cd/manifest-superadmin.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": "true",
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

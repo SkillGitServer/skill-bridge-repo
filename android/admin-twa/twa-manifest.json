@@ -1,0 +1,42 @@
+{
+  "packageId": "cd.bot.skillbridge.admin",
+  "host": "skill-bridge-india.bot.cd",
+  "name": "Vault",
+  "launcherName": "Vault",
+  "display": "fullscreen",
+  "themeColor": "#FFFFFF",
+  "themeColorDark": "#000000",
+  "navigationColor": "#FFFFFF",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/admin/auth?access=admin_launch_2026&pwa=admin",
+  "iconUrl": "https://skill-bridge-india.bot.cd/adm-icon.png",
+  "maskableIconUrl": "https://skill-bridge-india.bot.cd/adm-icon.png",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://skill-bridge-india.bot.cd/manifest-admin.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": "true",
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

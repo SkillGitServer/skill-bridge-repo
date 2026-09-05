@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cd.bot.skillbridge.student",
+      "sha256_cert_fingerprints": [
+        "05:69:5B:8A:CC:3E:6A:18:0E:5D:D6:A0:E3:0F:E0:89:9D:8E:EB:32:9F:5D:3E:72:C3:34:60:46:AC:37:C4:C3"
+      ]
+    }
+  }
+]
