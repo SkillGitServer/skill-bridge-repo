@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, MessageSquare, X, Send, Sparkles, User, HelpCircle, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bot, MessageSquare, X, Send, Sparkles, Phone, Mail, ClipboardList } from 'lucide-react';
 import axios from 'axios';
 import { getAuthToken } from '../../utils/auth';
 
@@ -22,7 +23,77 @@ const FORBIDDEN_KEYWORDS = [
   'supss app'
 ];
 
+/**
+ * Lightweight inline markdown formatter for bolding, headers, and bullet lists
+ */
+function formatInline(str) {
+  const parts = str.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
+function renderFormattedText(text) {
+  if (!text) return null;
+
+  const lines = text.split('\n');
+  const elements = [];
+  let currentList = [];
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      elements.push(
+        <ul key={`list_${elements.length}`} className="list-disc pl-4 space-y-1 my-1.5">
+          {currentList.map((item, idx) => (
+            <li key={idx} className="text-gray-700">{formatInline(item)}</li>
+          ))}
+        </ul>
+      );
+      currentList = [];
+    }
+  };
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList();
+      elements.push(<div key={`br_${idx}`} className="h-1.5" />);
+      return;
+    }
+
+    if (trimmed.startsWith('### ') || trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+      flushList();
+      const headingText = trimmed.replace(/^#+\s*/, '');
+      elements.push(
+        <h4 key={`h_${idx}`} className="font-extrabold text-gray-900 text-xs mt-2 mb-1">
+          {formatInline(headingText)}
+        </h4>
+      );
+      return;
+    }
+
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      currentList.push(trimmed.substring(2));
+      return;
+    }
+
+    flushList();
+    elements.push(
+      <p key={`p_${idx}`} className="leading-relaxed">
+        {formatInline(trimmed)}
+      </p>
+    );
+  });
+
+  flushList();
+  return elements;
+}
+
 export default function BridgeAIWidget({ mentor, mentorExam, studentName }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -91,6 +162,16 @@ STRICT RULES & CONSTRAINTS:
 3. Keep your answers clear, supportive, concise, and professional.`;
   };
 
+  // Navigate to the correct pending exam or exams section
+  const handleNavigateToExam = () => {
+    setIsOpen(false);
+    if (mentorExam && mentorExam._id) {
+      navigate(`/student/exam/mentor-${mentorExam._id}`);
+    } else {
+      navigate('/student/exam');
+    }
+  };
+
   // Local fallback response generator if offline or API unavailable
   const generateLocalAnswer = (query) => {
     const lower = query.toLowerCase();
@@ -99,7 +180,7 @@ STRICT RULES & CONSTRAINTS:
       return "I'm Bridge AI, dedicated exclusively to assisting Skill Bridge India students with their learning journey, practice tests, mentor sessions, and career guidance. I cannot assist with administrative tools or external applications. Let's focus on your dashboard, assessments, or studies!";
     }
 
-    if (lower.includes('mentor') || lower.includes('teacher') || lower.includes('guide') || lower.includes('advisor')) {
+    if (lower.includes('mentor') || lower.includes('teacher') || lower.includes('guide') || lower.includes('advisor') || lower.includes('contact')) {
       const mName = mentor?.name || localStorage.getItem('admin_name');
       const mEmail = mentor?.email || localStorage.getItem('admin_email');
       const mMobile = mentor?.mobile;
@@ -231,6 +312,75 @@ STRICT RULES & CONSTRAINTS:
     }
   };
 
+  // Parse action buttons dynamically for AI messages
+  const getMessageActions = (msg) => {
+    if (msg.sender !== 'ai') return null;
+
+    const lower = (msg.text || '').toLowerCase();
+    const actions = [];
+
+    // 1. Mentor actions detection (phone & email)
+    const hasMentorTopic = 
+      lower.includes('mentor') ||
+      lower.includes('assigned mentor') ||
+      lower.includes('contact them');
+
+    const mPhone = mentor?.mobile || (msg.text.match(/(?:\+91|0)?[6-9]\d{9}/) || [])[0];
+    const mEmail = mentor?.email || localStorage.getItem('admin_email') || (msg.text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/) || [])[0];
+
+    if (hasMentorTopic && (mPhone || mEmail)) {
+      if (mPhone) {
+        actions.push(
+          <a
+            key="call-mentor"
+            href={`tel:${mPhone}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold shadow-xs transition-transform active:scale-95 no-underline"
+          >
+            <Phone size={12} />
+            <span>Call Mentor</span>
+          </a>
+        );
+      }
+      if (mEmail) {
+        actions.push(
+          <a
+            key="email-mentor"
+            href={`mailto:${mEmail}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[11px] font-bold shadow-xs transition-transform active:scale-95 no-underline"
+          >
+            <Mail size={12} />
+            <span>Email Mentor</span>
+          </a>
+        );
+      }
+    }
+
+    // 2. Pending Exam actions detection
+    const hasExamTopic =
+      lower.includes('pending assessment') ||
+      lower.includes('active assessment') ||
+      lower.includes('pending exam') ||
+      lower.includes('mentor evaluation') ||
+      lower.includes('start exam now') ||
+      lower.includes('mentor assessment');
+
+    if (hasExamTopic) {
+      actions.push(
+        <button
+          key="view-exams"
+          type="button"
+          onClick={handleNavigateToExam}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gray-900 hover:bg-black text-white rounded-xl text-[11px] font-extrabold shadow-xs transition-transform active:scale-95 cursor-pointer"
+        >
+          <ClipboardList size={13} />
+          <span>View Pending Exams</span>
+        </button>
+      );
+    }
+
+    return actions.length > 0 ? actions : null;
+  };
+
   const quickPrompts = [
     { label: '👨‍🏫 Who is my mentor?', query: 'Who is my assigned mentor and how do I contact them?' },
     { label: '📝 Pending exams?', query: 'Do I have any pending exams or assessments right now?' },
@@ -242,35 +392,34 @@ STRICT RULES & CONSTRAINTS:
     <div className="bridge-ai-widget-root">
       {/* ── Chat Window Overlay ── */}
       <div
-        className={`fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[380px] h-[480px] max-h-[75vh] flex flex-col z-40 rounded-3xl transition-all duration-300 transform origin-bottom-right shadow-2xl border ${
+        className={`fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[390px] h-[500px] max-h-[75vh] flex flex-col z-40 rounded-3xl transition-all duration-300 transform origin-bottom-right shadow-2xl border border-gray-200/90 ${
           isOpen
             ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
             : 'opacity-0 translate-y-6 scale-90 pointer-events-none'
         }`}
         style={{
-          background: 'rgba(255, 255, 255, 0.94)',
+          background: 'rgba(255, 255, 255, 0.98)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderColor: 'rgba(99, 102, 241, 0.25)',
-          boxShadow: '0 20px 40px -15px rgba(99, 102, 241, 0.25), 0 0 20px rgba(0,0,0,0.08)'
+          boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.25), 0 0 15px rgba(0,0,0,0.06)'
         }}
       >
-        {/* Header */}
-        <div className="px-4 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white flex items-center justify-between rounded-t-3xl shadow-sm select-none">
+        {/* Header (Themed to dark slate/gray matching top nav) */}
+        <div className="px-4 py-3.5 bg-gray-900 text-white flex items-center justify-between rounded-t-3xl shadow-sm border-b border-gray-800 select-none">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-white/20 border border-white/40 flex items-center justify-center shadow-inner">
-              <Bot size={18} className="text-white" />
+            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-white shadow-inner">
+              <Bot size={18} />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-extrabold text-sm tracking-tight text-white leading-none">Bridge AI</h3>
-                <span className="px-1.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-300/40 text-[9px] font-black uppercase">
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase">
                   Student
                 </span>
               </div>
-              <p className="text-[10px] text-indigo-100/90 font-medium flex items-center gap-1 mt-0.5">
+              <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Active Assistant
+                Online Assistant
               </p>
             </div>
           </div>
@@ -279,7 +428,7 @@ STRICT RULES & CONSTRAINTS:
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-1.5 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors cursor-pointer"
               title="Close chat"
             >
               <X size={18} />
@@ -288,31 +437,45 @@ STRICT RULES & CONSTRAINTS:
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs bg-slate-50/50">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-            >
+        <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs bg-gray-50/60">
+          {messages.map((msg) => {
+            const actions = getMessageActions(msg);
+            return (
               <div
-                className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line shadow-xs ${
-                  msg.sender === 'user'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-none font-medium'
-                    : 'bg-white text-gray-800 border border-indigo-100/80 rounded-tl-none font-normal'
-                }`}
+                key={msg.id}
+                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
-                {msg.text}
+                <div
+                  className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-xs ${
+                    msg.sender === 'user'
+                      ? 'bg-gray-900 text-white rounded-tr-none font-medium'
+                      : 'bg-white text-gray-800 border border-gray-200/90 rounded-tl-none font-normal'
+                  }`}
+                >
+                  {msg.sender === 'user' ? (
+                    <span className="whitespace-pre-line">{msg.text}</span>
+                  ) : (
+                    <div>{renderFormattedText(msg.text)}</div>
+                  )}
+
+                  {/* Dynamic Action Buttons (Call/Email Mentor, View Exams) */}
+                  {actions && (
+                    <div className="flex flex-wrap gap-2 mt-2.5 pt-2 border-t border-gray-100">
+                      {actions}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[9px] text-gray-400 mt-0.5 px-1">
+                  {msg.timestamp}
+                </span>
               </div>
-              <span className="text-[9px] text-gray-400 mt-0.5 px-1">
-                {msg.timestamp}
-              </span>
-            </div>
-          ))}
+            );
+          })}
 
           {isLoading && (
             <div className="flex items-center gap-2 text-gray-400 text-xs px-2 py-1">
-              <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                <Sparkles size={12} className="text-indigo-600 animate-spin" />
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <Sparkles size={12} className="text-gray-700 animate-spin" />
               </div>
               <span className="font-semibold text-gray-500 animate-pulse">Bridge AI is thinking...</span>
             </div>
@@ -323,13 +486,13 @@ STRICT RULES & CONSTRAINTS:
 
         {/* Quick Suggestion Chips */}
         {messages.length <= 2 && (
-          <div className="px-3 py-2 bg-white/70 border-t border-indigo-50/80 flex flex-wrap gap-1.5 shrink-0">
+          <div className="px-3 py-2 bg-white/90 border-t border-gray-200/80 flex flex-wrap gap-1.5 shrink-0">
             {quickPrompts.map((qp, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => handleSendMessage(qp.query)}
-                className="text-[10px] font-bold bg-indigo-50/90 text-indigo-700 hover:bg-indigo-100 border border-indigo-200/60 px-2.5 py-1 rounded-lg transition-all hover:scale-102 active:scale-95 cursor-pointer"
+                className="text-[10px] font-bold bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 border border-gray-200/90 px-2.5 py-1 rounded-xl transition-all hover:scale-102 active:scale-95 cursor-pointer shadow-2xs"
               >
                 {qp.label}
               </button>
@@ -343,7 +506,7 @@ STRICT RULES & CONSTRAINTS:
             e.preventDefault();
             handleSendMessage();
           }}
-          className="p-2.5 bg-white border-t border-gray-200/80 rounded-b-3xl flex items-center gap-2 shrink-0"
+          className="p-2.5 bg-white border-t border-gray-200/90 rounded-b-3xl flex items-center gap-2 shrink-0"
         >
           <input
             ref={inputRef}
@@ -353,13 +516,13 @@ STRICT RULES & CONSTRAINTS:
             onKeyDown={handleKeyDown}
             placeholder="Ask Bridge AI anything..."
             disabled={isLoading}
-            className="flex-1 bg-gray-100/80 hover:bg-gray-100 focus:bg-white text-gray-900 placeholder-gray-400 text-xs px-3.5 py-2.5 rounded-2xl border border-transparent focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+            className="flex-1 bg-gray-100/90 hover:bg-gray-100 focus:bg-white text-gray-900 placeholder-gray-400 text-xs px-3.5 py-2.5 rounded-2xl border border-transparent focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all"
           />
 
           <button
             type="submit"
             disabled={!inputText.trim() || isLoading}
-            className="p-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl shadow-xs transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center shrink-0"
+            className="p-2.5 bg-gray-900 hover:bg-black text-white rounded-2xl shadow-xs transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer flex items-center justify-center shrink-0"
             title="Send Message"
           >
             <Send size={15} />
@@ -367,12 +530,12 @@ STRICT RULES & CONSTRAINTS:
         </form>
       </div>
 
-      {/* ── Floating Action Button (FAB) ── */}
+      {/* ── Floating Action Button (FAB) (Themed to dark slate/gray matching top nav) ── */}
       <div className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 select-none">
         <button
           type="button"
           onClick={() => setIsOpen(prev => !prev)}
-          className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-800 text-white shadow-[0_8px_25px_rgba(99,102,241,0.4)] border border-white/30 px-4 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-bold group"
+          className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white shadow-[0_8px_25px_rgba(0,0,0,0.3)] border border-gray-700/80 px-4 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-bold group"
           title={isOpen ? "Close Bridge AI" : "Ask Bridge AI"}
           aria-label="Toggle Bridge AI Assistant"
         >
@@ -380,9 +543,9 @@ STRICT RULES & CONSTRAINTS:
             {isOpen ? (
               <X size={18} className="text-white" />
             ) : (
-              <div className="relative">
+              <div className="relative flex items-center justify-center">
                 <MessageSquare size={18} className="text-white fill-white/20" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 border border-white" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 border-2 border-gray-900" />
               </div>
             )}
           </div>
