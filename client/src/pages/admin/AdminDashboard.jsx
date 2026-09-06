@@ -17,9 +17,6 @@ function AdminDashboard() {
   const adminName = localStorage.getItem('admin_name') || localStorage.getItem('auth_name') || 'Admin';
   const referralCode = localStorage.getItem('admin_referral_code') || '';
 
-  // State for referred students
-  const [students, setStudents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [uploadLogs, setUploadLogs] = useState([]);
 
   // Retention & Auto-Delete Settings (1d, 3d, 7d, 30d, never)
@@ -108,48 +105,15 @@ function AdminDashboard() {
     fetchRetentionSettings();
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const fetchStudents = async () => {
-      setIsLoading(true);
-      try {
-        const token = getAuthToken('vault');
-        const res = await axios.get('/api/admin/students', {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-        if (active) {
-          setStudents(res.data.students || []);
-        }
-      } catch (err) {
-        console.error('Failed to load referred students:', err);
-      } finally {
-        if (active) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (referralCode) {
-      fetchStudents();
-    }
-    return () => {
-      active = false;
-    };
-  }, [referralCode]);
-
   const handleLogout = () => {
     logoutUser('admin', navigate);
   };
 
   const fetchAllDashboardData = async () => {
     try {
-      const token = getAuthToken('vault');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       await Promise.allSettled([
         fetchUploadLogs(),
-        fetchRetentionSettings(),
-        axios.get('/api/admin/students', { headers }).then(res => setStudents(res.data.students || [])).catch(console.error)
+        fetchRetentionSettings()
       ]);
     } catch (err) {
       console.error('Error refreshing admin dashboard:', err);
@@ -158,25 +122,11 @@ function AdminDashboard() {
 
   const { RefreshButton, RefreshOverlay } = useAdminRefresh(fetchAllDashboardData);
 
-  const copyReferralCode = () => {
-    if (!referralCode) return;
-    navigator.clipboard.writeText(referralCode);
-    toast.success('Referral code copied to clipboard!');
-  };
-
   const isAuthenticated = !!adminEmail || !!getAuthToken('vault');
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/auth?access=admin_launch_2026" replace />;
   }
-
-  const formatDate = (dateStr) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('en-IN', {
-        day: '2-digit', month: 'short', year: 'numeric'
-      });
-    } catch { return 'N/A'; }
-  };
 
   return (
     <div className="bg-transparent min-h-screen font-sans text-gray-900 w-full flex flex-col">
@@ -274,150 +224,6 @@ function AdminDashboard() {
                   )}
                 </div>
               ))
-            )}
-          </div>
-        </div>
-
-        {/* Referred Students Table */}
-        <div className="bg-white/80 backdrop-blur-lg border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl overflow-hidden text-left">
-          <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-extrabold text-gray-900">Referred Students</h2>
-              <p className="text-xs text-gray-400 mt-0.5">View and track students registered using your referral code</p>
-            </div>
-            <span className="text-xs font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5">
-              Active Code: {referralCode || 'None'}
-            </span>
-          </div>
-
-          {/* Table wrapper for mobile responsiveness */}
-          <div className="w-full">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-3 bg-white">
-                <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-xs font-extrabold text-gray-500">Loading referred students...</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop View (min-width: 768px) */}
-                <div className="hidden md:block overflow-x-auto w-full">
-                  <table className="w-full min-w-[900px] border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50/80 border-b border-gray-100 text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">
-                        <th className="px-6 py-4 text-left">Student Name</th>
-                        <th className="px-6 py-4 text-left">Email Address</th>
-                        <th className="px-6 py-4 text-left">Mobile Number</th>
-                        <th className="px-6 py-4 text-left">Registration Date</th>
-                        <th className="px-6 py-4 text-center">Account Status</th>
-                        <th className="px-6 py-4 text-right">Referral Code</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {students.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-10 text-center text-gray-400 font-bold text-sm bg-white">
-                            No referred students data available.
-                          </td>
-                        </tr>
-                      ) : (
-                        students.map((student) => (
-                          <tr key={student.id} className="hover:bg-gray-50/80 transition-colors bg-white/40 group">
-                            <td className="px-6 py-5 whitespace-nowrap">
-                              <div className="flex items-center gap-3.5">
-                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center font-black text-xs text-gray-700 shadow-2xs group-hover:scale-105 transition-transform">
-                                  {student.name ? student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'S'}
-                                </div>
-                                <div>
-                                  <h4 className="text-sm font-black text-gray-900 leading-tight">{student.name}</h4>
-                                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600">Referred Student</span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-xs font-mono text-gray-700 font-semibold">
-                              {student.email}
-                            </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-xs font-mono">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/80 text-blue-700 font-bold border border-blue-100/80">
-                                📞 {student.mobile || 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-xs text-gray-500 font-mono font-semibold">
-                              {formatDate(student.createdAt)}
-                            </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-center">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${student.isTrialActive
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-red-50 text-red-700 border-red-200'
-                                }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${student.isTrialActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                                {student.isTrialActive ? 'Active' : 'Deactivated'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-5 whitespace-nowrap text-right text-xs font-mono font-bold text-gray-800">
-                              <span className="bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-700">
-                                {student.referralCodeUsed || referralCode || 'N/A'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile View (max-width: 767px) */}
-                <div className="block md:hidden p-3 space-y-3">
-                  {students.length === 0 ? (
-                    <div className="p-8 text-center text-gray-400 font-bold text-xs bg-white rounded-xl">
-                      No referred students data available.
-                    </div>
-                  ) : (
-                    students.map((student) => (
-                      <div key={student.id} className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-xs">
-                        <div className="flex justify-between items-start gap-2 border-b border-gray-100 pb-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 border border-gray-200 flex items-center justify-center font-bold text-xs text-gray-700 shrink-0">
-                              {student.name ? student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'S'}
-                            </div>
-                            <div>
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600">Referred Student</span>
-                              <h4 className="text-sm font-black text-gray-900 leading-tight">{student.name}</h4>
-                            </div>
-                          </div>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border shrink-0 ${student.isTrialActive
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                              : 'bg-red-50 text-red-700 border-red-100'
-                            }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${student.isTrialActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                            {student.isTrialActive ? 'Active' : 'Deactivated'}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-2 text-xs">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-extrabold uppercase text-gray-400">Email Address:</span>
-                            <span className="font-semibold text-gray-800 break-all font-mono">{student.email}</span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-extrabold uppercase text-gray-400">Mobile Number:</span>
-                            <span className="font-bold text-blue-700 font-mono flex items-center gap-1">
-                              <span>📞</span> {student.mobile || 'N/A'}
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-extrabold uppercase text-gray-400">Registration Date:</span>
-                            <span className="font-semibold text-gray-600 font-mono">{formatDate(student.createdAt)}</span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-extrabold uppercase text-gray-400">Referral Code Used:</span>
-                            <span className="font-bold text-gray-800 font-mono">{student.referralCodeUsed || referralCode || 'N/A'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </>
             )}
           </div>
         </div>
