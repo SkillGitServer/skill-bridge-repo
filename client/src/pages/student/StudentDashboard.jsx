@@ -8,6 +8,7 @@ import StudentUpgradeForm from '../../components/student/StudentUpgradeForm';
 import LanguageSwitcher from '../../components/shared/LanguageSwitcher';
 import PullToRefreshWrapper from '../../components/shared/PullToRefreshWrapper';
 import { logoutUser, getAuthToken } from '../../utils/auth';
+import BridgeAIWidget from '../../components/student/BridgeAIWidget';
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -383,6 +384,7 @@ function StudentDashboard() {
   const [studentRank, setStudentRank] = useState(1);
   const [totalStudents, setTotalStudents] = useState(1);
   const [hasUploadedResume, setHasUploadedResume] = useState(false);
+  const [assignedMentor, setAssignedMentor] = useState(null);
   const [assignedMentorPhoto, setAssignedMentorPhoto] = useState(() => localStorage.getItem('admin_profile_photo') || '');
 
   useEffect(() => {
@@ -399,9 +401,12 @@ function StudentDashboard() {
         if (profileRes && profileRes.data) {
           setStudentName(profileRes.data.name);
           localStorage.setItem('auth_name', profileRes.data.name);
-          if (profileRes.data.mentor && profileRes.data.mentor.profilePhoto) {
-            setAssignedMentorPhoto(profileRes.data.mentor.profilePhoto);
-            localStorage.setItem('admin_profile_photo', profileRes.data.mentor.profilePhoto);
+          if (profileRes.data.mentor) {
+            setAssignedMentor(profileRes.data.mentor);
+            if (profileRes.data.mentor.profilePhoto) {
+              setAssignedMentorPhoto(profileRes.data.mentor.profilePhoto);
+              localStorage.setItem('admin_profile_photo', profileRes.data.mentor.profilePhoto);
+            }
           }
           if (profileRes.data.docResume) {
             setHasUploadedResume(true);
@@ -1318,6 +1323,13 @@ function StudentDashboard() {
           </div>
         </div>
       )}
+
+      {/* Floating Bridge AI Student Assistant */}
+      <BridgeAIWidget
+        mentor={assignedMentor}
+        mentorExam={mentorExam}
+        studentName={studentName}
+      />
       </div>
     </PullToRefreshWrapper>
   );
