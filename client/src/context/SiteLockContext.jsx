@@ -1,11 +1,52 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const SiteLockContext = createContext();
 
 export const useSiteLock = () => useContext(SiteLockContext);
 
+const devPrefix = (import.meta.env.VITE_DEV_ROUTE_PREFIX || 'secure-dev-portal-x97').toLowerCase().trim();
+
+/**
+ * Strict check to determine if the path is a Dev Control Panel route.
+ * Bypasses DevTools blocker, DOM unmounting, debugger loops, and shortcut locks.
+ */
+export const isDevControlPanelRoute = (path) => {
+  const currentPath = (path || (typeof window !== 'undefined' ? window.location.pathname : '')).toLowerCase().trim();
+  return (
+    currentPath.startsWith(`/${devPrefix}`) ||
+    currentPath.startsWith('/dev') ||
+    currentPath.includes('/dev/dashboard') ||
+    currentPath.includes('/dev-dashboard') ||
+    currentPath.includes('secure-dev-portal')
+  );
+};
+
+export const DevToolsBlockerUI = () => (
+  <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center select-none animate-fade-in">
+    <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 text-4xl mb-5 shadow-[0_0_50px_rgba(239,68,68,0.3)] animate-pulse">
+      🔒
+    </div>
+    <h2 className="text-2xl font-black text-white tracking-tight mb-2">
+      Developer Tools Access Blocked
+    </h2>
+    <p className="text-xs text-gray-400 max-w-md leading-relaxed font-semibold mb-6">
+      Developer Mode and Element Inspection are currently locked by System Security. Close DevTools to resume browsing or turn off DevTools Blocker in Dev Control Panel.
+    </p>
+    <div className="bg-red-950/40 border border-red-900/60 rounded-2xl p-4 max-w-md text-left text-[11px] text-red-300 space-y-1.5 shadow-inner">
+      <p className="font-extrabold uppercase tracking-wider text-red-400">Security Guidance:</p>
+      <p>• Close browser Inspector / DevTools panel to restore normal viewing.</p>
+      <p>• Turn off "DevTools Blocker" via the Dev Control Panel (`/dev/dashboard`).</p>
+    </div>
+  </div>
+);
+
 export const SiteLockProvider = ({ children }) => {
+  const location = useLocation();
+  const currentPath = location?.pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const isDevRoute = isDevControlPanelRoute(currentPath);
+
   const [isSiteBlocked, setIsSiteBlocked] = useState(() => {
     return localStorage.getItem('isSiteBlocked') === 'true';
   });
@@ -136,6 +177,11 @@ export const SiteLockProvider = ({ children }) => {
     if (!isKeyboardLockActive) return;
 
     const handleKeyDown = (e) => {
+      // STRICT EXCLUSION: Dev Control Panel Bypass
+      if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) {
+        return;
+      }
+
       const key = e.key ? e.key.toLowerCase() : '';
 
       // 1. EXPLICITLY ALLOW: Ctrl + Shift + R (Hard Refresh)
@@ -178,6 +224,12 @@ export const SiteLockProvider = ({ children }) => {
     }
 
     const checkDevTools = () => {
+      // STRICT EXCLUSION: Dev Control Panel Bypass - never trigger detection or debugger on dev routes
+      if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) {
+        setIsDevToolsDetected(false);
+        return;
+      }
+
       if (window.self !== window.top) {
         setIsDevToolsDetected(false);
         return;
@@ -209,7 +261,9 @@ export const SiteLockProvider = ({ children }) => {
     };
   }, [isDevToolsBlocked]);
 
-  const devPrefix = import.meta.env.VITE_DEV_ROUTE_PREFIX || 'secure-dev-portal-x97';
+  // If DevTools is detected as open and the blocker is enabled (and not on Dev Control Panel),
+  // completely unmount the application's DOM structure and render ONLY the Blocker UI screen.
+  const shouldBlock = isDevToolsBlocked && isDevToolsDetected && !isDevRoute;
 
   return (
     <SiteLockContext.Provider value={{ 
@@ -219,26 +273,13 @@ export const SiteLockProvider = ({ children }) => {
       toggleDevToolsBlocker, 
       isDevToolsDetected,
       isKeyboardLockActive,
-      toggleKeyboardLock
+      toggleKeyboardLock,
+      isDevRoute
     }}>
-      {children}
-      {isDevToolsBlocked && isDevToolsDetected && !window.location.pathname.startsWith(`/${devPrefix}`) && (
-        <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center select-none animate-fade-in">
-          <div className="w-20 h-20 bg-red-500/10 border border-red-500/30 rounded-3xl flex items-center justify-center text-red-500 text-4xl mb-5 shadow-[0_0_50px_rgba(239,68,68,0.3)] animate-pulse">
-            🔒
-          </div>
-          <h2 className="text-2xl font-black text-white tracking-tight mb-2">
-            Developer Tools Access Blocked
-          </h2>
-          <p className="text-xs text-gray-400 max-w-md leading-relaxed font-semibold mb-6">
-            Developer Mode and Element Inspection are currently locked by System Security. Close DevTools to resume browsing or turn off DevTools Blocker in Dev Control Panel.
-          </p>
-          <div className="bg-red-950/40 border border-red-900/60 rounded-2xl p-4 max-w-md text-left text-[11px] text-red-300 space-y-1.5 shadow-inner">
-            <p className="font-extrabold uppercase tracking-wider text-red-400">Security Guidance:</p>
-            <p>• Close browser Inspector / DevTools panel to restore normal viewing.</p>
-            <p>• Turn off "DevTools Blocker" via the Dev Control Panel (`/dev/dashboard`).</p>
-          </div>
-        </div>
+      {shouldBlock ? (
+        <DevToolsBlockerUI />
+      ) : (
+        children
       )}
     </SiteLockContext.Provider>
   );

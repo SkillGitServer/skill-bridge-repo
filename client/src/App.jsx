@@ -7,7 +7,7 @@ import StealthRoute from './components/shared/StealthRoute';
 import ProtectedRoute from './components/shared/ProtectedRoute';
 import SiteBlockedOverlay from './components/shared/SiteBlockedOverlay';
 import GlobalLoader from './components/shared/GlobalLoader';
-import { SiteLockProvider, useSiteLock } from './context/SiteLockContext';
+import { SiteLockProvider, useSiteLock, isDevControlPanelRoute } from './context/SiteLockContext';
 import ScrollToTop from './components/shared/ScrollToTop';
 import { usePWA } from './hooks/usePWA';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
@@ -362,9 +362,10 @@ function AppRoutes() {
 function AppContent() {
   const { isDevToolsBlocked } = useSiteLock();
 
-  // Always block Ctrl+S / Cmd+S (Save Page As) across the app
+  // Always block Ctrl+S / Cmd+S (Save Page As) across the app (excluded on Dev Control Panel)
   useEffect(() => {
     const handleSavePrevent = (e) => {
+      if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) return;
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
         e.preventDefault();
         e.stopPropagation();
@@ -378,11 +379,19 @@ function AppContent() {
   useEffect(() => {
     if (!isDevToolsBlocked) return;
 
+    // Strict exclusion: Dev Control Panel Bypass
+    if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) return;
+
     // Disable Right Click
-    const handleContextMenu = (e) => e.preventDefault();
+    const handleContextMenu = (e) => {
+      if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) return;
+      e.preventDefault();
+    };
     
     // Disable specific keyboard shortcuts
     const handleKeyDown = (e) => {
+      if (typeof window !== 'undefined' && isDevControlPanelRoute(window.location.pathname)) return;
+
       // Prevent F12
       if (e.key === 'F12') e.preventDefault();
       
@@ -461,20 +470,20 @@ function AppContent() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <AppRoutes />
   );
 }
 
 function App() {
   return (
-    <div className="min-h-screen bg-transparent text-gray-900 w-full relative">
-      <AmbientBackground />
-      <SiteLockProvider>
-        <AppContent />
-      </SiteLockProvider>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-transparent text-gray-900 w-full relative">
+        <AmbientBackground />
+        <SiteLockProvider>
+          <AppContent />
+        </SiteLockProvider>
+      </div>
+    </BrowserRouter>
   );
 }
 
