@@ -21,18 +21,6 @@
     X-Content-Type-Options = "nosniff"
 
 [[redirects]]
-  from = "/.well-known/assetlinks.json"
-  to = "/assetlinks.json"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/.well-known/*"
-  to = "/assetlinks.json"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
