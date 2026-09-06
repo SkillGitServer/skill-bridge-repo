@@ -31,10 +31,12 @@ public class LauncherActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Setting an orientation crashes the app due to the transparent background on Android 8.0
-        // Oreo and below. We only set the orientation on Oreo and above. This only affects the
-        // splash screen and Chrome will still respect the orientation.
-        // See https://github.com/GoogleChromeLabs/bubblewrap/issues/496 for details.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getWindow().setStatusBarColor(android.graphics.Color.WHITE);
+            getWindow().getDecorView().setSystemUiVisibility(
+                getWindow().getDecorView().getSystemUiVisibility() | android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            );
+        }
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         } else {
