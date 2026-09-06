@@ -35,6 +35,7 @@
     <application
         android:name="Application"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/appName"
         
@@ -78,6 +79,7 @@
 
         <activity android:name="LauncherActivity"
             android:alwaysRetainTaskState="true"
+            android:hardwareAccelerated="true"
             android:label="@string/launcherName"
             android:exported="true">
             <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL"
@@ -165,6 +167,7 @@
         <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity" />
 
         <activity android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
+            android:hardwareAccelerated="true"
             android:configChanges="orientation|screenSize" />
 
         <provider

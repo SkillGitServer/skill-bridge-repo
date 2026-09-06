@@ -39,6 +39,8 @@ vercel-live-feedback {
 
 html, body {
   overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 html {
@@ -52,6 +54,18 @@ body {
   background-color: transparent !important;
   color: #111827 !important;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* ─── Hardware-Accelerated Momentum Scrolling for All Scrollable Containers ─── */
+#root,
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-auto,
+[data-scrollable="true"] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
 /* ─── Universal Typography Enforcement for Mobile & Desktop ─── */
