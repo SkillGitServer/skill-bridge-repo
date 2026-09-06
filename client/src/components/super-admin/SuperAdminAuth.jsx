@@ -29,9 +29,15 @@ function SuperAdminAuth() {
   const [step, setStep]               = useState(1);
   const [otp, setOtp]                 = useState('');
 
-  // Shared fields
-  const [email,          setEmail]          = useState('');
-  const [password,       setPassword]       = useState('');
+  // Shared fields (Namespaced for Chrome password manager isolation)
+  const [formData, setFormData] = useState({
+    supss_master_email: '',
+    supss_master_password: '',
+  });
+  const email = formData.supss_master_email;
+  const password = formData.supss_master_password;
+  const setEmail = (val) => setFormData(prev => ({ ...prev, supss_master_email: typeof val === 'function' ? val(prev.supss_master_email) : val }));
+  const setPassword = (val) => setFormData(prev => ({ ...prev, supss_master_password: typeof val === 'function' ? val(prev.supss_master_password) : val }));
   const [showPassword,   setShowPassword]   = useState(false);
   const [lockedPassword, setLockedPassword] = useState(false);
 
@@ -257,11 +263,12 @@ function SuperAdminAuth() {
         setPasskey('');
       } else {
         // Login path — direct password authentication (no OTP)
-        const res = await axios.post('/api/auth/login', {
-          email,
-          password,
+        const payload = {
+          email: formData.supss_master_email.trim(),
+          password: formData.supss_master_password,
           requestedRole: 'superadmin'
-        });
+        };
+        const res = await axios.post('/api/auth/login', payload);
 
         // Store JWT in sessionStorage (cleared on tab/app close)
         sessionStorage.setItem('supss_token', res.data.token);
@@ -526,13 +533,16 @@ function SuperAdminAuth() {
 
               {/* Master Email */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-gray-600">
+                <label htmlFor="supss_master_email" className="text-xs font-black uppercase tracking-wider text-gray-600">
                   Master Email
                 </label>
                 <input
                   type="email"
+                  name="supss_master_email"
+                  id="supss_master_email"
+                  autoComplete="supss_master_email"
                   placeholder="superadmin@skillhub.in"
-                  value={email}
+                  value={formData.supss_master_email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3.5 text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                 />
@@ -540,14 +550,17 @@ function SuperAdminAuth() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-gray-600">
+                <label htmlFor="supss_master_password" className="text-xs font-black uppercase tracking-wider text-gray-600">
                   Password
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="supss_master_password"
+                    id="supss_master_password"
+                    autoComplete={isLoginMode ? "supss_master_password" : "new-password"}
                     placeholder="Min. 12 chars, uppercase, number, symbol"
-                    value={password}
+                    value={formData.supss_master_password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3.5 pr-12 text-sm font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                   />

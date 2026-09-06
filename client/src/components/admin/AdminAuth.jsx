@@ -82,13 +82,19 @@ function AdminAuth() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   useDocumentTitle(isLoginMode ? 'Admin Login | Skill Bridge India' : 'Admin Register | Skill Bridge India');
 
-  // Form fields
+  // Form fields (Namespaced for Chrome password manager isolation)
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
-  const [email, setEmail]         = useState('');
+  const [formData, setFormData]   = useState({
+    vault_admin_email: '',
+    vault_admin_password: '',
+  });
+  const email = formData.vault_admin_email;
+  const password = formData.vault_admin_password;
+  const setEmail = (val) => setFormData(prev => ({ ...prev, vault_admin_email: typeof val === 'function' ? val(prev.vault_admin_email) : val }));
+  const setPassword = (val) => setFormData(prev => ({ ...prev, vault_admin_password: typeof val === 'function' ? val(prev.vault_admin_password) : val }));
   const [mobile, setMobile]       = useState('');
   const [countryCode, setCountryCode] = useState('+91');
-  const [password, setPassword]   = useState('');
   const [city, setCity]           = useState('');
   const [step, setStep]           = useState(1);
   const [otp, setOtp]             = useState('');
@@ -387,11 +393,12 @@ function AdminAuth() {
 
     try {
       if (isLoginMode) {
-        const res = await axios.post('/api/auth/login', {
-          email,
-          password,
+        const payload = {
+          email: formData.vault_admin_email.trim(),
+          password: formData.vault_admin_password,
           requestedRole: 'admin'
-        });
+        };
+        const res = await axios.post('/api/auth/login', payload);
 
         // Direct login — store JWT in localStorage & sessionStorage with vault_token prefix
         localStorage.setItem('vault_token', res.data.token);
@@ -884,11 +891,14 @@ function AdminAuth() {
 
               {/* Work Email */}
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-gray-700">Work Email</label>
+                <label htmlFor="vault_admin_email" className="text-sm font-bold text-gray-700">Work Email</label>
                 <input
                   type="email"
+                  name="vault_admin_email"
+                  id="vault_admin_email"
+                  autoComplete="vault_admin_email"
                   placeholder="admin@institute.com"
-                  value={email}
+                  value={formData.vault_admin_email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
                 />
@@ -896,12 +906,15 @@ function AdminAuth() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-gray-700">Password</label>
+                <label htmlFor="vault_admin_password" className="text-sm font-bold text-gray-700">Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="vault_admin_password"
+                    id="vault_admin_password"
+                    autoComplete={isLoginMode ? "vault_admin_password" : "new-password"}
                     placeholder={isLoginMode ? 'Your password' : 'Min. 8 characters'}
-                    value={password}
+                    value={formData.vault_admin_password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
                   />
