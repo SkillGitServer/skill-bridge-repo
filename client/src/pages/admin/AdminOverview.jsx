@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 import { getAuthToken } from '../../utils/auth';
 
@@ -579,9 +580,6 @@ function AdminOverview() {
                 key={idx}
                 onClick={() => {
                   card.onView();
-                  if (card.path === '/admin/reports' || card.path === '/admin/reviews') {
-                    toast.success(`${card.title} navigation details loaded.`);
-                  }
                   navigate(card.path);
                 }}
                 className={`${
