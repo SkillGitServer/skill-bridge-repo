@@ -528,14 +528,12 @@ function StudentDashboard() {
       return;
     }
 
-    const loadingToast = toast.loading('Opening assigned mentor assessment...');
     try {
       const token = getAuthToken('spark');
       const res = await axios.get('/api/mentor-exams/active', {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
 
-      toast.dismiss(loadingToast);
       if (res?.data && res.data._id && res.data.isActive) {
         const targetId = res.data._id;
         localStorage.setItem(`attempted_mentor_exam_${targetId}`, 'true');
@@ -547,7 +545,7 @@ function StudentDashboard() {
         return;
       }
     } catch (err) {
-      toast.dismiss(loadingToast);
+      console.error('Error fetching active mentor exam:', err);
     }
 
     navigate('/student/exam/combined');

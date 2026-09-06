@@ -72,7 +72,6 @@ function AdminExamList() {
   const { RefreshButton, RefreshOverlay } = useAdminRefresh(fetchExams);
 
   const handlePublishDraft = async (exam) => {
-    const loadingToast = toast.loading('Publishing draft assessment...');
     try {
       const payload = {
         title: exam.title || 'Custom Assessment',
@@ -102,7 +101,6 @@ function AdminExamList() {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
       }
-      toast.dismiss(loadingToast);
 
       // Remove from local drafts if present in localStorage
       const localDrafts = localStorage.getItem('mentor_exams_drafts');
@@ -117,7 +115,6 @@ function AdminExamList() {
       toast.success(`"${exam.title}" published to platform successfully!`);
       fetchExams();
     } catch (err) {
-      toast.dismiss(loadingToast);
       console.error('Error publishing draft:', err);
       toast.error('Failed to publish draft. Please check server connection.');
     }
@@ -151,17 +148,14 @@ function AdminExamList() {
     }
 
     // Delete published exam from MongoDB database
-    const loadingToast = toast.loading('Deleting assessment from database...');
     try {
       const token = getAuthToken('vault') || localStorage.getItem('auth_token');
       await axios.delete(`/api/mentor-exams/${exam.id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      toast.dismiss(loadingToast);
       toast.success('Assessment deleted from database successfully!');
       fetchExams();
     } catch (err) {
-      toast.dismiss(loadingToast);
       console.error('Error deleting exam:', err);
       toast.error('Failed to delete assessment from database.');
     }

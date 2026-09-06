@@ -30,7 +30,6 @@ function SuperAdminAIChatLogs() {
       });
       if (res.data && Array.isArray(res.data.logs)) {
         setChatLogs(res.data.logs);
-        if (showToast) toast.success('AI Chat Logs refreshed!');
       }
     } catch (err) {
       console.error('Failed to fetch AI chat logs:', err);

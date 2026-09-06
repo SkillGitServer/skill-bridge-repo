@@ -1,5 +1,3 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -251,29 +249,7 @@ export const logoutUser = async (role, navigate, skipConfirm = false) => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_role');
 
-      toast.custom(
-        (t) =>
-          React.createElement(
-            'div',
-            {
-              className: `${
-                t.visible ? 'animate-in fade-in zoom-in-95 duration-200' : 'animate-out fade-out zoom-out-95 duration-150'
-              } max-w-xs bg-gray-900/95 text-white backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-3.5 px-4 shadow-2xl flex items-center gap-3 font-sans border-t-2 border-t-emerald-500 pointer-events-auto`
-            },
-            React.createElement(
-              'div',
-              { className: 'w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shrink-0 shadow-sm' },
-              '✨'
-            ),
-            React.createElement(
-              'div',
-              { className: 'flex-1 min-w-0 text-left' },
-              React.createElement('h5', { className: 'text-xs font-black tracking-wide text-white' }, 'Logged Out Successfully'),
-              React.createElement('p', { className: 'text-[10px] text-emerald-400 font-bold mt-0.5' }, 'Super Admin session terminated safely.')
-            )
-          ),
-        { duration: 2000 }
-      );
+      toast.success('Logged out successfully.');
       if (navigate) navigate('/sudo-control-panel', { replace: true });
     } else if (role === 'admin') {
       localStorage.removeItem('vault_token');
@@ -285,29 +261,7 @@ export const logoutUser = async (role, navigate, skipConfirm = false) => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_role');
 
-      toast.custom(
-        (t) =>
-          React.createElement(
-            'div',
-            {
-              className: `${
-                t.visible ? 'animate-in fade-in zoom-in-95 duration-200' : 'animate-out fade-out zoom-out-95 duration-150'
-              } max-w-xs bg-gray-900/95 text-white backdrop-blur-xl border border-emerald-500/40 rounded-2xl p-3.5 px-4 shadow-2xl flex items-center gap-3 font-sans border-t-2 border-t-emerald-500 pointer-events-auto`
-            },
-            React.createElement(
-              'div',
-              { className: 'w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-base shrink-0 shadow-sm' },
-              '✨'
-            ),
-            React.createElement(
-              'div',
-              { className: 'flex-1 min-w-0 text-left' },
-              React.createElement('h5', { className: 'text-xs font-black tracking-wide text-white' }, 'Logged Out Successfully'),
-              React.createElement('p', { className: 'text-[10px] text-emerald-400 font-bold mt-0.5' }, 'Admin session terminated safely.')
-            )
-          ),
-        { duration: 2000 }
-      );
+      toast.success('Logged out successfully.');
       if (navigate) navigate('/admin/auth?access=admin_launch_2026', { replace: true });
     } else {
       clearAllAuthTokensAndState();

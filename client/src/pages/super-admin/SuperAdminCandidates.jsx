@@ -102,7 +102,6 @@ function SuperAdminCandidates() {
       toast.error('Please select an active mentor.');
       return;
     }
-    const loadingToast = toast.loading('Assigning mentor to student...');
     try {
       const token = getAuthToken('supss');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -112,12 +111,10 @@ function SuperAdminCandidates() {
         adminId
       }, { headers });
 
-      toast.dismiss(loadingToast);
       toast.success(res.data.message || 'Mentor assigned successfully!');
       setAssignModalStudent(null);
       fetchCandidates(); // Refresh candidate list
     } catch (err) {
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to assign mentor.');
     }
   };

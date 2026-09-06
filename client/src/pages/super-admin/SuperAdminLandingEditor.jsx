@@ -68,7 +68,6 @@ function SuperAdminLandingEditor() {
     }
 
     setIsSaving(true);
-    const saveToast = toast.loading('Saving landing page changes to live database...');
 
     // Get absolute latest data from ref
     const payload = { ...formDataRef.current };
@@ -79,7 +78,6 @@ function SuperAdminLandingEditor() {
 
     try {
       const res = await axios.put('/api/admin/landing-page', payload);
-      toast.dismiss(saveToast);
       toast.success('Public landing page updated successfully!');
       if (res.data?.content) {
         const updated = { ...defaultLandingContent, ...res.data.content };
@@ -90,7 +88,6 @@ function SuperAdminLandingEditor() {
         } catch (e) { }
       }
     } catch (err) {
-      toast.dismiss(saveToast);
       console.error('Save landing content error:', err);
       toast.error(err.response?.data?.error || 'Saved locally! (Backend sync failed)');
     } finally {

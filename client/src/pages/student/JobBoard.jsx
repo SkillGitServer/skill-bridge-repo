@@ -57,9 +57,6 @@ function JobBoard() {
       return matchRole && matchLoc;
     });
     setFilteredJobs(filtered);
-    if (allJobs.length > 0) {
-      toast.success(`Found ${filtered.length} jobs matching search.`);
-    }
   };
 
   const handleApply = async (job) => {

@@ -97,7 +97,6 @@ function SuperAdminRevenue() {
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     setIsSavingSettings(true);
-    const loadingToast = toast.loading('Updating fee & duration configurations...');
 
     try {
       const payload = {
@@ -109,7 +108,6 @@ function SuperAdminRevenue() {
 
       const res = await axios.post('/api/payment/config', payload);
 
-      toast.dismiss(loadingToast);
       toast.success(res.data.message || 'Payment fees & duration allocation settings updated!');
       if (res.data.config) {
         setUnlockFee(res.data.config.unlockFee);
@@ -128,7 +126,6 @@ function SuperAdminRevenue() {
       }
     } catch (err) {
       console.error('Save config failed:', err);
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to update configurations.');
     } finally {
       setIsSavingSettings(false);

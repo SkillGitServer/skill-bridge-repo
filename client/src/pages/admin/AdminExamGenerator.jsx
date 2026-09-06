@@ -91,7 +91,6 @@ function AdminExamGenerator() {
           explanation: q.explanation || ''
         })));
       }
-      toast.success(`Loaded "${draft.title || 'Draft'}" for editing!`);
     }
   }, [location.state]);
 

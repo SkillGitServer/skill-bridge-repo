@@ -153,7 +153,6 @@ function AdminProfile() {
   const handleToggleKeyStatus = async () => {
     if (!currentKey) return;
     const nextStatus = currentKeyStatus === "Active" ? "Deactivated" : "Active";
-    const loadingToast = toast.loading(`Setting referral key status to ${nextStatus}...`);
     try {
       const token = getAuthToken('vault');
       const updatedPast = pastKeys.map(k => ({ ...k, status: 'Deactivated' }));
@@ -174,17 +173,14 @@ function AdminProfile() {
         setPastKeys([{ code: currentKey, status: 'Deactivated' }, ...pastKeys.filter(k => k.code !== currentKey)]);
       }
       localStorage.setItem('admin_referral_code_status', nextStatus);
-      toast.dismiss(loadingToast);
       toast.success(`Referral key is now ${nextStatus.toLowerCase()}.`);
     } catch (err) {
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to toggle referral key status.');
     }
   };
 
   // Activate a past key — automatically deactivates current key so only 1 active key exists
   const togglePastKeyStatus = async (codeToActivate) => {
-    const loadingToast = toast.loading(`Activating key ${codeToActivate}...`);
     try {
       const token = getAuthToken('vault');
       // All existing keys become Deactivated, target key becomes Active
@@ -212,10 +208,8 @@ function AdminProfile() {
       localStorage.setItem('admin_referral_code', codeToActivate);
       localStorage.setItem('admin_referral_code_status', 'Active');
 
-      toast.dismiss(loadingToast);
       toast.success(`Activated key ${codeToActivate}. All other keys deactivated.`);
     } catch (err) {
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to activate key.');
     }
   };
@@ -224,7 +218,6 @@ function AdminProfile() {
   const handleGenerateNewKey = async () => {
     const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
     const nextKey = `SKILL-HUB-${randomChars}`;
-    const loadingToast = toast.loading('Generating and saving new active key...');
     try {
       const token = getAuthToken('vault');
       const oldKeys = [
@@ -252,10 +245,8 @@ function AdminProfile() {
       localStorage.setItem('admin_referral_code', nextKey);
       localStorage.setItem('admin_referral_code_status', "Active");
 
-      toast.dismiss(loadingToast);
       toast.success("Generated & activated new key: " + nextKey + ". Previous keys deactivated.");
     } catch (err) {
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to generate new key.');
     }
   };
@@ -281,7 +272,6 @@ function AdminProfile() {
     if (!formInstitute.trim()) { toast.error('Institute name cannot be empty.'); return; }
     if (!formReferralCode.trim()) { toast.error('Referral code cannot be empty.'); return; }
 
-    const loadingToast = toast.loading('Saving profile changes...');
     try {
       const token = getAuthToken('vault');
       await axios.put('/api/admin/profile', {
@@ -307,10 +297,8 @@ function AdminProfile() {
       localStorage.setItem('admin_institute', formInstitute.trim());
       localStorage.setItem('admin_referral_code', formReferralCode.trim());
 
-      toast.dismiss(loadingToast);
       toast.success('Admin details updated successfully!');
     } catch (err) {
-      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || 'Failed to update profile.');
     }
   };

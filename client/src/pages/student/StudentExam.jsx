@@ -284,7 +284,6 @@ function StudentExam() {
           setTimeLeft(parsed.timeLeft > 0 ? parsed.timeLeft : 60);
           setIsConfigured(true);
           setIsCompleted(false);
-          toast.success('Exam session restored! Resuming where you left off.');
           return; // Resumed active exam session successfully!
         }
       }
@@ -582,8 +581,6 @@ function StudentExam() {
       try {
         sessionStorage.removeItem(activeSessionKey);
       } catch (e) {}
-
-      toast.success('Exam result saved to database!');
     } catch (err) {
       console.error('Failed to save exam result to server:', err);
     }
