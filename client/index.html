@@ -60,6 +60,30 @@
         window.addEventListener('DOMContentLoaded', removeVercelToolbar);
       })();
 
+      // Pre-flight cleanup: if user explicitly selected English, ensure no rogue googtrans cookies persist
+      (function() {
+        try {
+          if (localStorage.getItem('preferred_language') === 'en') {
+            var host = window.location.hostname;
+            var hostParts = host.split('.');
+            var domains = ['', host, '.' + host];
+            for (var i = 0; i < hostParts.length - 1; i++) {
+              var parentDomain = hostParts.slice(i).join('.');
+              domains.push(parentDomain);
+              domains.push('.' + parentDomain);
+            }
+            var paths = ['/', window.location.pathname];
+            domains.forEach(function(d) {
+              paths.forEach(function(p) {
+                var domainAttr = d ? '; domain=' + d : '';
+                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=' + p + domainAttr;
+                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Max-Age=0; path=' + p + domainAttr;
+              });
+            });
+          }
+        } catch (e) {}
+      })();
+
       function googleTranslateElementInit() {
         new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,mr', autoDisplay: false}, 'google_translate_element');
       }

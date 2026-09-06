@@ -26,9 +26,10 @@ function Navbar() {
         </Link>
       </div>
 
-      {/* Right Side (Sign up - Mobile/Tablet Only) */}
-      <div className="flex-shrink-0 lg:hidden">
-        <Link to="/register" className="bg-gray-900 text-white font-bold px-4 sm:px-6 py-2 rounded-full hover:bg-black transition-all shadow-md text-sm sm:text-base whitespace-nowrap">
+      {/* Right Side (Sign up & Language - Mobile/Tablet Only) */}
+      <div className="flex items-center gap-2 flex-shrink-0 lg:hidden">
+        <LanguageSwitcher />
+        <Link to="/register" className="bg-gray-900 text-white font-bold px-3.5 sm:px-6 py-2 rounded-full hover:bg-black transition-all shadow-md text-xs sm:text-base whitespace-nowrap">
           Sign up
         </Link>
       </div>
