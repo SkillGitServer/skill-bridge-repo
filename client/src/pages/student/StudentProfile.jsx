@@ -667,6 +667,28 @@ function StudentProfile() {
             </div>
           </div>
 
+          {/* ── Section: Academic Credentials & Marksheets ── */}
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-white/40 p-6 text-left hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4 mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🎓</span>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Academic Credentials & Marksheets</h3>
+                  <p className="text-xs text-gray-400">10th, 12th & Graduation qualifications for job applications</p>
+                </div>
+              </div>
+              <Link
+                to="/student/complete-profile"
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 text-center shrink-0"
+              >
+                Complete / Update ✏️
+              </Link>
+            </div>
+            <p className="text-xs text-gray-600 font-medium leading-relaxed">
+              Verify your 10th, 12th, and Graduation marks with official PDF marksheets to unlock direct partner placement applications and interview scheduling.
+            </p>
+          </div>
+
           {/* ── Section 3: Document links and help options ── */}
           <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-white/40 p-3 text-left">
             {[

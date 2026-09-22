@@ -120,11 +120,11 @@ function StudentDashboard() {
   const location = useLocation();
   const greeting = getGreeting();
 
-  // Trial & Subscription State
+  // Trial & Subscription State — Default to permanent unlocked access
   const [trialTimeRemaining, setTrialTimeRemaining] = useState(86400);
   const [isTrialActive, setIsTrialActive] = useState(true);
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [isTrialLoading, setIsTrialLoading] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(true);
+  const [isTrialLoading, setIsTrialLoading] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Subscription Duration & Expiration State
@@ -141,7 +141,6 @@ function StudentDashboard() {
   useEffect(() => {
     if (location.search.includes('upgrade=true') || location.state?.openUpgrade) {
       setIsUpgradeModalOpen(true);
-      setIsTrialActive(false);
     }
   }, [location]);
 
@@ -173,43 +172,12 @@ function StudentDashboard() {
         if (res.data.allocatedDurationMonths) {
           setAllocatedDurationMonths(res.data.allocatedDurationMonths);
         }
-        setIsSubscriptionExpired(Boolean(res.data.isExpired));
-        setDaysRemaining(res.data.daysRemaining !== undefined ? res.data.daysRemaining : null);
-        if (res.data.assignedUnlockFee) {
-          setAssignedUnlockFee(res.data.assignedUnlockFee);
-        }
 
-        if (res.data.isUnlocked) {
-          setIsUnlocked(true);
-          localStorage.setItem('student_is_unlocked', 'true');
-          setIsTrialActive(true);
-          setIsTrialLoading(false);
-          return;
-        } else {
-          setIsUnlocked(false);
-          localStorage.setItem('student_is_unlocked', 'false');
-        }
-
-        const newExpiresAt = new Date(res.data.trialExpiresAt).getTime();
-        const now = Date.now();
-        const diffSeconds = Math.floor((newExpiresAt - now) / 1000);
-
-        // Check if trial was extended (+24hrs) by Super Admin
-        if (lastExpiresAtRef.current !== null && newExpiresAt > lastExpiresAtRef.current + 60000) {
-          toast.success('🎉 Super Admin granted your +24hr trial extension! Reloading...', { duration: 2000 });
-          setTimeout(() => window.location.reload(), 1200);
-          return;
-        }
-        lastExpiresAtRef.current = newExpiresAt;
-
-        const isUpgradeRequested = location.search.includes('upgrade=true') || location.state?.openUpgrade;
-        if (diffSeconds > 0 && !isUpgradeRequested && !isUpgradeModalOpen) {
-          setTrialTimeRemaining(diffSeconds);
-          setIsTrialActive(true);
-        } else {
-          setTrialTimeRemaining(diffSeconds > 0 ? diffSeconds : 0);
-          setIsTrialActive(false);
-        }
+        // Always treat all students as unlocked and active with permanent access
+        setIsUnlocked(true);
+        localStorage.setItem('student_is_unlocked', 'true');
+        setIsTrialActive(true);
+        setIsSubscriptionExpired(false);
         setIsTrialLoading(false);
       } catch (error) {
         console.error('Failed to load trial status:', error);
@@ -217,9 +185,9 @@ function StudentDashboard() {
       }
     };
     fetchTrialStatus();
-    intervalId = setInterval(fetchTrialStatus, 5000);
+    intervalId = setInterval(fetchTrialStatus, 15000);
     return () => clearInterval(intervalId);
-  }, [isUpgradeModalOpen]);
+  }, []);
 
   useEffect(() => {
     if (isTrialLoading || isUnlocked || !isTrialActive || trialTimeRemaining <= 0) {
@@ -655,15 +623,11 @@ function StudentDashboard() {
   };
 
 
-  if (!isTrialLoading && (!isTrialActive || isUpgradeModalOpen)) {
+  if (isUpgradeModalOpen) {
     return (
       <StudentUpgradeForm 
-        onBack={() => {
-          setIsUpgradeModalOpen(false);
-          setIsTrialActive(trialTimeRemaining > 0);
-        }} 
-        showBack={trialTimeRemaining > 0} 
-        trialTimeRemaining={trialTimeRemaining}
+        onBack={() => setIsUpgradeModalOpen(false)} 
+        showBack={true} 
         hasUploadedResume={hasUploadedResume}
       />
     );
@@ -684,56 +648,7 @@ function StudentDashboard() {
         </div>
       )}
 
-      {/* ── 14-Day Expiry Countdown Warning Banner ── */}
-      {isUnlocked && !isSubscriptionExpired && daysRemaining !== null && daysRemaining <= 14 && daysRemaining > 0 && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white py-2.5 px-4 text-center text-xs font-black flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 z-40 shadow-md border-b border-amber-600">
-          <div className="flex items-center gap-2">
-            <span className="animate-bounce">⚠️</span>
-            <span>
-              Your platform access expires in <strong>{daysRemaining} day{daysRemaining > 1 ? 's' : ''}</strong>! Renew now to keep your progress uninterrupted.
-            </span>
-          </div>
-          <button
-            onClick={handleExpressRenewal}
-            disabled={isRenewing}
-            className="bg-black hover:bg-gray-900 text-amber-300 text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full transition-all active:scale-95 cursor-pointer border border-amber-400/40 shrink-0 shadow-sm"
-          >
-            {isRenewing ? 'Opening Payment...' : `Express Renew (₹${assignedUnlockFee})`}
-          </button>
-        </div>
-      )}
 
-      {/* ── Subscription Expired Paywall Overlay ── */}
-      {isUnlocked && isSubscriptionExpired && (
-        <div className="fixed inset-0 z-[9999] bg-black/92 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center text-white">
-          <div className="max-w-md w-full bg-gray-900/90 border border-red-500/40 rounded-3xl p-6 sm:p-8 space-y-5 shadow-[0_0_60px_rgba(239,68,68,0.3)]">
-            <div className="w-16 h-16 rounded-2xl bg-red-500/20 border border-red-500/40 text-3xl flex items-center justify-center mx-auto text-red-400 shadow-inner">
-              ⌛
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-red-400">Access Period Ended</span>
-              <h2 className="text-2xl font-black text-white mt-1">Subscription Expired</h2>
-            </div>
-            <p className="text-xs text-gray-300 leading-relaxed font-medium">
-              Your allocated student access duration of <strong className="text-white">{allocatedDurationMonths} months</strong> has completed.
-              Renew your subscription now to instantly restore full dashboard access without re-uploading documents.
-            </p>
-            <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl text-[11px] text-gray-300 text-left space-y-1.5 font-medium">
-              <p className="text-orange-400 font-extrabold uppercase text-[10px] tracking-wider">⚡ Express 1-Click Renewal</p>
-              <p>✓ No referral keys or document re-uploads required</p>
-              <p>✓ All learning progress, exams, and stats preserved</p>
-            </div>
-            <button
-              onClick={handleExpressRenewal}
-              disabled={isRenewing}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-black text-xs uppercase tracking-wider py-4 rounded-full shadow-lg transition-all active:scale-98 cursor-pointer disabled:opacity-50 border border-orange-400/50"
-            >
-              {isRenewing ? 'Processing Renewal...' : `Renew Subscription Now (₹${assignedUnlockFee})`}
-            </button>
-            <p className="text-[10px] text-gray-500 font-mono">Secured by Razorpay • Instant Auto-Restore</p>
-          </div>
-        </div>
-      )}
 
       {/* ── Profile Transition Overlay ── */}
       {transStage !== 'idle' && (
@@ -885,62 +800,43 @@ function StudentDashboard() {
                 <div className="absolute top-0 right-0 w-36 h-36 bg-orange-500/20 rounded-full blur-[50px] pointer-events-none animate-float" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-500/10 rounded-full blur-[40px] pointer-events-none animate-float delay-300" />
 
-                {(!isUnlocked && isTrialActive && !isTrialLoading) ? (
-                  <div className="relative z-10 flex flex-col h-full justify-center items-center text-center animate-fade-in-up">
-                    <p className="text-[10px] uppercase font-black tracking-[0.25em] text-amber-400 mb-3 drop-shadow-md">Trial Time Remaining</p>
-                    <div className="bg-amber-400/10 text-amber-300 border border-amber-500/30 px-6 py-2.5 rounded-full text-2xl font-bold flex items-center gap-3 shadow-[0_0_20px_rgba(245,158,11,0.15)] mb-5 backdrop-blur-md">
-                      <span className="animate-pulse text-amber-400">⏱️</span> 
-                      <span translate="no" className="notranslate">{formatTime(trialTimeRemaining)}</span>
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-[10px] uppercase font-black tracking-[0.25em] text-orange-400">
+                        Recent Messages
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">Admin Broadcasts</p>
                     </div>
-                    <button 
-                      onClick={() => {
-                        setIsUpgradeModalOpen(true);
-                        setIsTrialActive(false);
-                      }}
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white text-[11px] font-black uppercase tracking-wider px-6 py-3 rounded-full transition-all active:scale-95 shadow-[0_5px_20px_rgba(249,115,22,0.3)] border border-orange-400/50 hover:scale-[1.02]"
-                    >
-                      Upgrade Your Profile
-                    </button>
+                    <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
+                      <span className="text-xs font-extrabold text-orange-400">📢</span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="relative z-10 flex flex-col justify-between h-full">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="text-[10px] uppercase font-black tracking-[0.25em] text-orange-400">
-                          Recent Messages
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">Admin Broadcasts</p>
-                      </div>
-                      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors">
-                        <span className="text-xs font-extrabold text-orange-400">📢</span>
-                      </div>
-                    </div>
 
-                    <div className="overflow-y-auto flex-1 pr-1 space-y-2 text-left z-10 my-auto">
-                      {notifications.length > 0 ? (
-                        notifications.slice(0, 2).map((item) => (
-                          <div 
-                            key={item.id || item._id} 
-                            onClick={() => handleNotificationClick(item)}
-                            className="flex gap-2 p-2 bg-white/5 border border-white/10 hover:border-orange-500/50 hover:bg-white/10 rounded-xl backdrop-blur-xs transition-all cursor-pointer group active:scale-[0.98]"
-                            title="Click to view details and open page"
-                          >
-                            <span className="text-xs shrink-0 group-hover:scale-110 transition-transform">🔔</span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex justify-between items-baseline gap-1">
-                                <span className="text-[10px] font-extrabold text-orange-400 group-hover:underline truncate">{item.subject || item.type}</span>
-                                <span className="text-[8px] text-gray-500 font-mono shrink-0">{item.timestamp}</span>
-                              </div>
-                              <p className="text-[10px] text-gray-300 font-medium line-clamp-1 mt-0.5">{item.message}</p>
+                  <div className="overflow-y-auto flex-1 pr-1 space-y-2 text-left z-10 my-auto">
+                    {notifications.length > 0 ? (
+                      notifications.slice(0, 2).map((item) => (
+                        <div 
+                          key={item.id || item._id} 
+                          onClick={() => handleNotificationClick(item)}
+                          className="flex gap-2 p-2 bg-white/5 border border-white/10 hover:border-orange-500/50 hover:bg-white/10 rounded-xl backdrop-blur-xs transition-all cursor-pointer group active:scale-[0.98]"
+                          title="Click to view details and open page"
+                        >
+                          <span className="text-xs shrink-0 group-hover:scale-110 transition-transform">🔔</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex justify-between items-baseline gap-1">
+                              <span className="text-[10px] font-extrabold text-orange-400 group-hover:underline truncate">{item.subject || item.type}</span>
+                              <span className="text-[8px] text-gray-500 font-mono shrink-0">{item.timestamp}</span>
                             </div>
+                            <p className="text-[10px] text-gray-300 font-medium line-clamp-1 mt-0.5">{item.message}</p>
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-[10px] text-gray-500 font-bold py-2">No messages from administrative mentors.</p>
-                      )}
-                    </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[10px] text-gray-500 font-bold py-2">No messages from administrative mentors.</p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
 

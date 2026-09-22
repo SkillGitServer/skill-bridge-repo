@@ -68,6 +68,12 @@ router.get('/api/student/profile', verifyToken, async (req, res) => {
       profilePhoto: student.profilePhoto || '',
       docResume: student.docResume || '',
       isUnlocked: student.isUnlocked || false,
+      percentage10th: student.percentage10th || '',
+      percentage12th: student.percentage12th || '',
+      percentageGraduation: student.percentageGraduation || '',
+      docGrade10: student.docGrade10 || '',
+      docGrade12: student.docGrade12 || '',
+      docGraduation: student.docGraduation || '',
       adminReferralCode: student.adminReferralCode || '',
       mentor,
       resumeReview: student.resumeReview || null,
@@ -125,6 +131,129 @@ router.put('/api/student/profile', verifyToken, async (req, res) => {
   } catch (err) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Failed to update profile.' });
+  }
+});
+
+// POST /api/student/complete-profile — Free access profile completion with mandatory mobile & documents
+router.post('/api/student/complete-profile', upload.fields([
+  { name: 'docGrade10', maxCount: 1 },
+  { name: 'docGrade12', maxCount: 1 },
+  { name: 'docGraduation', maxCount: 1 },
+  { name: 'docResume', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const jwt = require('jsonwebtoken');
+    let student = null;
+
+    // Resolve student from Auth header or email
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded && decoded.id) {
+          student = await Student.findById(decoded.id);
+        }
+      } catch (tokenErr) {
+        // Token verification failed, fallback to email if present
+      }
+    }
+
+    if (!student && req.body.email && req.body.email.trim()) {
+      const normalizedEmail = req.body.email.toLowerCase().trim();
+      student = await Student.findOne({
+        email: { $regex: new RegExp('^' + normalizedEmail.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') }
+      });
+    }
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student account not found. Please log in again.' });
+    }
+
+    // Mandatory mobile validation
+    const rawMobile = req.body.mobile ? String(req.body.mobile).trim() : '';
+    const cleanMobile = rawMobile.replace(/\D/g, '');
+
+    if (!cleanMobile) {
+      return res.status(400).json({ error: 'Mobile number is required to complete your student profile.' });
+    }
+
+    if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).' });
+    }
+
+    // Check duplicate mobile across other accounts
+    if (cleanMobile !== student.mobile) {
+      const { isMobileAlreadyInUse } = require('../utils/mobileValidator');
+      const inUse = await isMobileAlreadyInUse(cleanMobile, { userId: student._id, model: 'Student' });
+      if (inUse) {
+        return res.status(409).json({ error: 'This mobile number is already registered on Skill Bridge by another account. Please use a different mobile number.' });
+      }
+      student.mobile = cleanMobile;
+    }
+
+    // Process Academic Qualifications
+    if (req.body.percentage10th && req.body.percentage10th.trim()) {
+      student.percentage10th = req.body.percentage10th.trim();
+      const p10 = parseFloat(req.body.percentage10th);
+      if (!isNaN(p10)) student.grade10Percentage = p10;
+    }
+
+    if (req.body.percentage12th && req.body.percentage12th.trim()) {
+      student.percentage12th = req.body.percentage12th.trim();
+      const p12 = parseFloat(req.body.percentage12th);
+      if (!isNaN(p12)) student.grade12Percentage = p12;
+    }
+
+    if (req.body.percentageGraduation && req.body.percentageGraduation.trim()) {
+      student.percentageGraduation = req.body.percentageGraduation.trim();
+      const pGrad = parseFloat(req.body.percentageGraduation);
+      if (!isNaN(pGrad)) student.graduationPercentage = pGrad;
+    }
+
+    // Process Document Uploads
+    if (req.files) {
+      if (req.files['docGrade10'] && req.files['docGrade10'][0]) {
+        student.docGrade10 = req.files['docGrade10'][0].path;
+      }
+      if (req.files['docGrade12'] && req.files['docGrade12'][0]) {
+        student.docGrade12 = req.files['docGrade12'][0].path;
+      }
+      if (req.files['docGraduation'] && req.files['docGraduation'][0]) {
+        student.docGraduation = req.files['docGraduation'][0].path;
+      }
+      if (req.files['docResume'] && req.files['docResume'][0]) {
+        student.docResume = req.files['docResume'][0].path;
+      }
+    }
+
+    // Grant permanent free access
+    student.isUnlocked = true;
+    student.isTrialActive = true;
+
+    await student.save();
+
+    res.json({
+      success: true,
+      message: 'Student profile credentials saved successfully! Full access granted.',
+      student: {
+        id: student._id,
+        name: student.name,
+        email: student.email,
+        mobile: student.mobile,
+        isUnlocked: true,
+        percentage10th: student.percentage10th || '',
+        percentage12th: student.percentage12th || '',
+        percentageGraduation: student.percentageGraduation || '',
+        docGrade10: student.docGrade10 || '',
+        docGrade12: student.docGrade12 || '',
+        docGraduation: student.docGraduation || '',
+        docResume: student.docResume || ''
+      }
+    });
+  } catch (err) {
+    console.error('Complete student profile error:', err);
+    res.status(500).json({ error: err.message || 'Failed to save student profile credentials.' });
   }
 });
 

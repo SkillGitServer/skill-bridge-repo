@@ -19,10 +19,13 @@ const studentSchema = new mongoose.Schema({
   mobile: { type: String },
   percentage10th: { type: String, default: '' },
   percentage12th: { type: String, default: '' },
+  percentageGraduation: { type: String, default: '' },
   grade10Percentage: { type: Number },
   grade12Percentage: { type: Number },
+  graduationPercentage: { type: Number },
   docGrade10: { type: String },
   docGrade12: { type: String },
+  docGraduation: { type: String },
   docResume: { type: String },
   adminReferralCode: { type: String },
 

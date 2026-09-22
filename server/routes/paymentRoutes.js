@@ -29,24 +29,19 @@ async function getOrCreateSystemConfig() {
   return config;
 }
 
-// Process unlock payment
-router.post('/api/payment/unlock', upload.fields([{ name: 'docGrade10' }, { name: 'docGrade12' }, { name: 'docResume' }]), async (req, res) => {
+// Process unlock payment / profile unlock
+router.post('/api/payment/unlock', upload.fields([{ name: 'docGrade10' }, { name: 'docGrade12' }, { name: 'docGraduation' }, { name: 'docResume' }]), async (req, res) => {
   try {
     const { email, amount, referralCode } = req.body;
     
-    // 1. Enforce required admin referral code
-    if (!referralCode || !referralCode.trim()) {
-      return res.status(400).json({ error: 'Admin/Mentor referral code is required to unlock your profile.' });
-    }
-
-    const cleanRef = referralCode.trim();
+    // 1. Optional admin referral code
     const Admin = require('../models/Admin');
-    const admin = await Admin.findOne({
-      referralCode: { $regex: new RegExp('^' + cleanRef.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') }
-    });
-
-    if (!admin) {
-      return res.status(400).json({ error: 'Invalid Admin Referral Code. Please check the code provided by your mentor.' });
+    let admin = null;
+    if (referralCode && referralCode.trim()) {
+      const cleanRef = referralCode.trim();
+      admin = await Admin.findOne({
+        referralCode: { $regex: new RegExp('^' + cleanRef.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + '$', 'i') }
+      });
     }
 
     // 2. Validate & find student account
@@ -63,37 +58,27 @@ router.post('/api/payment/unlock', upload.fields([{ name: 'docGrade10' }, { name
       return res.status(404).json({ error: 'Student account not found.' });
     }
 
-    // 3. Fetch configuration fee to match or fall back to default
-    const config = await getOrCreateSystemConfig();
-    const finalAmount = amount || config.unlockFee || 99;
-
-    // 4. Create payment record
-    const payment = new Payment({
-      studentEmail: normalizedEmail,
-      amount: finalAmount
-    });
-    await payment.save();
-    
-    // 5. Update student status & link with mentor
+    // 3. Update student status & link with mentor if provided
     student.isUnlocked = true;
-    student.adminReferralCode = admin.referralCode; // Canonical referral code
-    student.assignedAdminId = admin._id;
-
-    // Calculate access expiry date based on snapshotted allocatedDurationMonths
-    const durationMonths = student.allocatedDurationMonths || 6;
-    const accessExp = new Date();
-    accessExp.setMonth(accessExp.getMonth() + durationMonths);
-    student.accessExpiresAt = accessExp;
+    student.isTrialActive = true;
+    if (admin) {
+      student.adminReferralCode = admin.referralCode; // Canonical referral code
+      student.assignedAdminId = admin._id;
+    }
 
     if (req.files && req.files['docGrade10']) student.docGrade10 = req.files['docGrade10'][0].path;
     if (req.files && req.files['docGrade12']) student.docGrade12 = req.files['docGrade12'][0].path;
+    if (req.files && req.files['docGraduation']) student.docGraduation = req.files['docGraduation'][0].path;
+    if (req.files && req.files['docResume']) student.docResume = req.files['docResume'][0].path;
+
     if (req.body.mobile && req.body.mobile.trim() && req.body.mobile.trim() !== student.mobile) {
+      const cleanMob = req.body.mobile.trim().replace(/\D/g, '');
       const { isMobileAlreadyInUse } = require('../utils/mobileValidator');
-      const inUse = await isMobileAlreadyInUse(req.body.mobile.trim(), { userId: student._id, model: 'Student' });
+      const inUse = await isMobileAlreadyInUse(cleanMob, { userId: student._id, model: 'Student' });
       if (inUse) {
         return res.status(409).json({ error: 'This mobile number is already registered on Skill Bridge by another account. Please enter a different mobile number.' });
       }
-      student.mobile = req.body.mobile.trim();
+      student.mobile = cleanMob;
     }
     if (req.body.percentage10th && req.body.percentage10th.trim()) {
       student.percentage10th = req.body.percentage10th.trim();
@@ -105,24 +90,31 @@ router.post('/api/payment/unlock', upload.fields([{ name: 'docGrade10' }, { name
       const p12 = parseFloat(req.body.percentage12th);
       if (!isNaN(p12)) student.grade12Percentage = p12;
     }
+    if (req.body.percentageGraduation && req.body.percentageGraduation.trim()) {
+      student.percentageGraduation = req.body.percentageGraduation.trim();
+      const pGrad = parseFloat(req.body.percentageGraduation);
+      if (!isNaN(pGrad)) student.graduationPercentage = pGrad;
+    }
 
     await student.save();
 
-    // 6. Ensure student ID is added to the admin's assignedStudents array
-    if (!admin.assignedStudents) {
-      admin.assignedStudents = [];
-    }
-    if (!admin.assignedStudents.some(id => id.toString() === student._id.toString())) {
-      admin.assignedStudents.push(student._id);
-      await admin.save();
+    if (admin) {
+      if (!admin.assignedStudents) {
+        admin.assignedStudents = [];
+      }
+      if (!admin.assignedStudents.some(id => id.toString() === student._id.toString())) {
+        admin.assignedStudents.push(student._id);
+        await admin.save();
+      }
     }
     
-    res.json({ message: 'Payment processed and dashboard unlocked successfully', mentorName: admin.name });
+    res.json({ message: 'Profile updated and dashboard unlocked successfully', mentorName: admin ? admin.name : null });
   } catch (err) {
     console.error('Unlock payment error:', err);
     res.status(500).json({ error: err.message || 'Payment processing failed.' });
   }
 });
+
 
 // Get total revenue
 router.get('/api/payment/revenue', async (req, res) => {

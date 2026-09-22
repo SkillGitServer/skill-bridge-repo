@@ -53,6 +53,7 @@ import StudentExam from './pages/student/StudentExam';
 import StudentLeaderboard from './pages/student/StudentLeaderboard';
 import ResumeReview from './pages/student/ResumeReview';
 import JobBoard from './pages/student/JobBoard';
+import StudentUpgradeForm from './components/student/StudentUpgradeForm';
 
 import About from './pages/About';
 import Privacy from './pages/Privacy';
@@ -310,6 +311,8 @@ function AppRoutes() {
                 <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
                 <Route path="/student/resume" element={<ResumeReview />} />
                 <Route path="/student/jobs" element={<JobBoard />} />
+                <Route path="/student/complete-profile" element={<StudentUpgradeForm onBack={() => window.location.href = '/student/dashboard'} showBack={true} />} />
+                <Route path="/student/upgrade" element={<StudentUpgradeForm onBack={() => window.location.href = '/student/dashboard'} showBack={true} />} />
               </Route>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Login />} />
