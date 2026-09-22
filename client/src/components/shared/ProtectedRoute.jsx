@@ -35,7 +35,11 @@ const ProtectedRoute = ({ allowedRoles }) => {
             if (!res.data.isUnlocked) {
               const expiresAt = new Date(res.data.trialExpiresAt).getTime();
               if (expiresAt <= Date.now()) {
-                if (location.pathname !== '/student/dashboard' && location.pathname !== '/student_dashboard') {
+                if (
+                  location.pathname !== '/student/dashboard' &&
+                  location.pathname !== '/student_dashboard' &&
+                  location.pathname !== '/student/jobs'
+                ) {
                   window.location.href = '/student/dashboard';
                 }
               }

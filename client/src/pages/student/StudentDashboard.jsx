@@ -1123,12 +1123,6 @@ function StudentDashboard() {
 
               <div 
                 onClick={() => {
-                  if (!isUnlocked) {
-                    toast.error('🔒 Premium Feature: Job Board access is exclusive to Pro & Premium tier members. Please upgrade your profile!');
-                    setIsUpgradeModalOpen(true);
-                    setIsTrialActive(false);
-                    return;
-                  }
                   navigate('/student/jobs');
                 }}
                 className={`bg-gradient-to-br ${
@@ -1140,8 +1134,8 @@ function StudentDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-600 text-xl group-hover:scale-110 transition-transform">💼</div>
                   {!isUnlocked ? (
-                    <span className="text-[9px] bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-extrabold px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-                      <span>👑</span> Premium
+                    <span className="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                      <span>💼</span> Verified Roles
                     </span>
                   ) : (
                     <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full">
@@ -1152,10 +1146,9 @@ function StudentDashboard() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-extrabold text-orange-900">Job Board</p>
-                    {!isUnlocked && <span className="text-xs">🔒</span>}
                   </div>
                   <p className="text-[10px] text-orange-600 font-medium mt-0.5">
-                    {!isUnlocked ? 'Pro & Premium placement roles' : 'Explore active verified roles'}
+                    Explore active verified roles
                   </p>
                 </div>
               </div>
