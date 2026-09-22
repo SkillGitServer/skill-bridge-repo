@@ -1017,30 +1017,20 @@ function StudentDashboard() {
                 onClick={() => {
                   navigate('/student/jobs');
                 }}
-                className={`bg-gradient-to-br ${
-                  !isUnlocked 
-                    ? 'from-amber-500/10 via-orange-500/5 to-yellow-500/10 border-2 border-amber-400/60 shadow-md hover:border-amber-500' 
-                    : 'from-orange-50 to-amber-50 border border-orange-100'
-                } rounded-2xl p-5 flex flex-col justify-between h-36 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden`}
+                className="bg-gradient-to-br from-amber-50 via-orange-50/60 to-indigo-50/40 border border-amber-200/70 hover:border-indigo-400 rounded-2xl p-5 flex flex-col justify-between h-36 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden shadow-xs"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-600 text-xl group-hover:scale-110 transition-transform">💼</div>
-                  {!isUnlocked ? (
-                    <span className="text-[9px] bg-amber-100 text-amber-800 font-extrabold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
-                      <span>💼</span> Verified Roles
-                    </span>
-                  ) : (
-                    <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full">
-                      ✨ Unlocked
-                    </span>
-                  )}
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500/20 to-amber-500/20 border border-orange-200/60 flex items-center justify-center text-orange-600 text-xl group-hover:scale-110 transition-transform">💼</div>
+                  <span className="text-[9px] bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 font-extrabold px-2.5 py-0.5 rounded-full border border-indigo-200/60 shadow-xs">
+                    ✨ Verified Matcher
+                  </span>
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-extrabold text-orange-900">Job Board</p>
+                    <p className="text-xs font-black text-slate-900 group-hover:text-indigo-900 transition-colors">Career Matcher</p>
                   </div>
-                  <p className="text-[10px] text-orange-600 font-medium mt-0.5">
-                    Explore active verified roles
+                  <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                    Explore verified corporate roles
                   </p>
                 </div>
               </div>
