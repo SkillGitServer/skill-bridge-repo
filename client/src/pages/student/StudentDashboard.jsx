@@ -181,9 +181,13 @@ function StudentDashboard() {
 
         if (res.data.isUnlocked) {
           setIsUnlocked(true);
+          localStorage.setItem('student_is_unlocked', 'true');
           setIsTrialActive(true);
           setIsTrialLoading(false);
           return;
+        } else {
+          setIsUnlocked(false);
+          localStorage.setItem('student_is_unlocked', 'false');
         }
 
         const newExpiresAt = new Date(res.data.trialExpiresAt).getTime();
@@ -1079,25 +1083,21 @@ function StudentDashboard() {
                 <div
                   key={mod.id}
                   onClick={() => {
-                    if (!isUnlocked) {
-                      toast.error('🔒 Upgrade Required: Subject-wise practice exams are locked for free accounts. Please upgrade your profile!');
-                      setIsUpgradeModalOpen(true);
-                      setIsTrialActive(false);
-                      return;
-                    }
                     navigate(`/student/exam/${mod.key}`);
                   }}
                   className={`bg-white/80 backdrop-blur-md rounded-2xl p-3 border ${mod.borderColor} shadow-sm flex flex-col items-center gap-2 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 active:scale-95 text-center relative overflow-hidden group`}
                 >
-                  {!isUnlocked && (
-                    <span className="absolute top-2 right-2 text-[9px] bg-orange-100 text-orange-700 font-extrabold px-1.5 py-0.5 rounded-md">🔒 Premium</span>
+                  {!isUnlocked ? (
+                    <span className="absolute top-2 right-2 text-[9px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.5 rounded-md shadow-xs">1 Q Free</span>
+                  ) : (
+                    <span className="absolute top-2 right-2 text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-md shadow-xs">10 Qs</span>
                   )}
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${mod.color}`}>
                     {mod.icon}
                   </div>
                   <div>
                     <h4 className="text-[10px] font-bold text-gray-800 leading-tight">{mod.title}</h4>
-                    <p className="text-[9px] text-gray-400 mt-0.5">{isUnlocked ? '10 Qs' : 'Upgrade Req.'}</p>
+                    <p className="text-[9px] text-gray-400 mt-0.5">{isUnlocked ? '10 Qs' : '1 Q (Free Tier)'}</p>
                   </div>
                 </div>
               ))}

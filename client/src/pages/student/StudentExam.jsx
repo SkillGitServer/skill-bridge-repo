@@ -217,7 +217,9 @@ function StudentExam() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return localStorage.getItem('student_is_unlocked') === 'true';
+  });
   const [showUpgradeForm, setShowUpgradeForm] = useState(false);
 
   // Marathi translation states
@@ -234,7 +236,9 @@ function StudentExam() {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data) {
-          setIsUnlocked(res.data.isUnlocked || false);
+          const unlocked = Boolean(res.data.isUnlocked);
+          setIsUnlocked(unlocked);
+          localStorage.setItem('student_is_unlocked', unlocked ? 'true' : 'false');
         }
       } catch (err) {
         console.error('Failed to load profile for exam upgrade check:', err);
@@ -317,9 +321,11 @@ function StudentExam() {
             }
 
             setMentorExam(res.data);
-            setQuestions(res.data.questions);
-            setUserAnswers(Array(res.data.questions.length).fill(null));
-            setTimeLeft((res.data.duration || 15) * 60);
+            const allQs = Array.isArray(res.data.questions) ? res.data.questions : [];
+            const finalQs = !isUnlocked ? allQs.slice(0, 1) : allQs;
+            setQuestions(finalQs);
+            setUserAnswers(Array(finalQs.length).fill(null));
+            setTimeLeft(!isUnlocked ? 60 : (res.data.duration || 15) * 60);
             setIsConfigured(true);
           } else {
             toast.error('No active mentor exam found.');
@@ -353,15 +359,19 @@ function StudentExam() {
             }
 
             setMentorExam(res.data);
-            setQuestions(res.data.questions);
-            setUserAnswers(Array(res.data.questions.length).fill(null));
-            setTimeLeft((res.data.duration || 15) * 60);
+            const allQs = Array.isArray(res.data.questions) ? res.data.questions : [];
+            const finalQs = !isUnlocked ? allQs.slice(0, 1) : allQs;
+            setQuestions(finalQs);
+            setUserAnswers(Array(finalQs.length).fill(null));
+            setTimeLeft(!isUnlocked ? 60 : (res.data.duration || 15) * 60);
             setIsConfigured(true);
             return;
           }
         } catch (e) {}
 
-        if (category !== 'combined') {
+        if (!isUnlocked) {
+          setQuestionSize(1);
+        } else if (category !== 'combined') {
           setQuestionSize(10);
         } else {
           // Pick dynamic default size for default/combined exams
@@ -378,7 +388,7 @@ function StudentExam() {
       };
       checkActiveMentorExam();
     }
-  }, [category, activeSessionKey, isMentorExam, navigate, currentStudentEmail]);
+  }, [category, activeSessionKey, isMentorExam, navigate, currentStudentEmail, isUnlocked]);
 
   // Mid-Exam State Persistence: Sync progress to sessionStorage on every answer/tick
   useEffect(() => {
@@ -434,30 +444,34 @@ function StudentExam() {
 
   // Handle starting exam with configured size
   const handleStartExam = () => {
-    const finalSize = parseInt(questionSize, 10);
-
-    if (!isUnlocked && (category !== 'combined' || finalSize > 10)) {
-      toast.error('🔒 Upgrade Required: Subject-wise exams & 50-question full assessments are locked for free accounts. Please upgrade your profile!');
-      setShowUpgradeForm(true);
-      return;
-    }
+    // If student is NOT upgraded (locked), force question count to 1.
+    // If student IS upgraded, allow standard question count (10 or configured selection).
+    const targetSize = !isUnlocked ? 1 : parseInt(questionSize, 10);
 
     const sEmail = localStorage.getItem('auth_email') || localStorage.getItem('student_email') || 'student@careerbridge.in';
-    const selectedQuestions = isMentorExam 
-      ? shuffleAndPick(questions, finalSize)
-      : smartSelectQuestions(rawData, finalSize, category, sEmail);
+    let selectedQuestions = isMentorExam 
+      ? shuffleAndPick(questions, targetSize)
+      : smartSelectQuestions(rawData, targetSize, category, sEmail);
 
-    if (selectedQuestions.length === 0) {
-      toast.error('Failed to load exam data.');
-      navigate('/student/dashboard');
-      return;
+    if (!selectedQuestions || selectedQuestions.length === 0) {
+      if (rawData && rawData.length > 0) {
+        selectedQuestions = rawData.slice(0, targetSize);
+      } else {
+        toast.error('Failed to load exam data.');
+        navigate('/student/dashboard');
+        return;
+      }
     }
 
-    setQuestions(selectedQuestions);
+    // Force questions array to a maximum of 1 question for unupgraded students
+    const finalQuestions = !isUnlocked ? selectedQuestions.slice(0, 1) : selectedQuestions;
+    const finalCount = finalQuestions.length;
+
+    setQuestions(finalQuestions);
     setCurrentIndex(0);
-    setUserAnswers(Array(finalSize).fill(null));
+    setUserAnswers(Array(finalCount).fill(null));
     setIsCompleted(false);
-    setTimeLeft(finalSize * 60); // 1 minute per question
+    setTimeLeft(finalCount * 60); // 1 minute per question (60s for 1 question)
     setIsConfigured(true);
   };
 
@@ -823,6 +837,17 @@ function StudentExam() {
     timerDotColor = "bg-amber-500";
   }
 
+  if (showUpgradeForm) {
+    return (
+      <StudentUpgradeForm 
+        onBack={() => setShowUpgradeForm(false)} 
+        showBack={true} 
+        trialTimeRemaining={0}
+        hasUploadedResume={true}
+      />
+    );
+  }
+
   return (
     <div translate="no" className="notranslate min-h-screen flex flex-col bg-gray-50 font-sans w-full select-none relative">
       
@@ -922,11 +947,38 @@ function StudentExam() {
               <div className="space-y-6">
                 {/* Info Block */}
                 <div className="bg-orange-50/50 border border-orange-100/80 rounded-2xl p-4 text-xs font-semibold text-orange-800 leading-relaxed">
-                  🚀 Preparing a customized exam from the <strong>{currentCategoryName}</strong> bank. {category === 'combined' ? `Total database pool size is ${totalQuestions} questions.` : 'This exam contains 10 questions.'}
+                  🚀 Preparing a customized exam from the <strong>{currentCategoryName}</strong> bank.{' '}
+                  {!isUnlocked ? (
+                    <span className="text-amber-900 font-bold block mt-1">
+                      🔒 Free Tier Preview: You will receive 1 question for this assessment. Upgraded accounts receive full 10+ question assessments with certifications.
+                    </span>
+                  ) : category === 'combined' ? (
+                    `Total database pool size is ${totalQuestions} questions.`
+                  ) : (
+                    'This exam contains 10 questions.'
+                  )}
                 </div>
 
-                {/* Size Selector for Combined Assessment only */}
-                {category === 'combined' ? (
+                {/* Size Selector for Combined Assessment or Free Allocation Notice */}
+                {!isUnlocked ? (
+                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                    <div>
+                      <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                        Question Allocation
+                      </p>
+                      <p className="text-xs font-bold text-amber-900 mt-0.5">
+                        1 Question <span className="text-[10px] bg-amber-200/80 text-amber-900 font-extrabold px-1.5 py-0.5 rounded ml-1">Free Tier</span>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowUpgradeForm(true)}
+                      className="text-xs font-black text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-3.5 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                    >
+                      Unlock 10+ Qs 👑
+                    </button>
+                  </div>
+                ) : category === 'combined' ? (
                   <div>
                     <label className="block text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-3">
                       Number of Questions
@@ -1081,6 +1133,20 @@ function StudentExam() {
                   </div>
 
                   {/* Action Buttons Directly Beneath */}
+                  {!isUnlocked && (
+                    <div className="w-full bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 text-center shadow-xs">
+                      <p className="text-xs font-bold text-amber-900">
+                        Want complete 10+ question assessments, verified rankings, and official certificates?
+                      </p>
+                      <button
+                        onClick={() => setShowUpgradeForm(true)}
+                        className="mt-2.5 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-98"
+                      >
+                        Upgrade Profile to Unlock All Questions 👑
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex flex-col sm:flex-row gap-3.5 w-full">
                     <button
                       onClick={() => navigate('/student/dashboard')}

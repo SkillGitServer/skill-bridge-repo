@@ -38,7 +38,8 @@ const ProtectedRoute = ({ allowedRoles }) => {
                 if (
                   location.pathname !== '/student/dashboard' &&
                   location.pathname !== '/student_dashboard' &&
-                  location.pathname !== '/student/jobs'
+                  location.pathname !== '/student/jobs' &&
+                  !location.pathname.startsWith('/student/exam')
                 ) {
                   window.location.href = '/student/dashboard';
                 }
