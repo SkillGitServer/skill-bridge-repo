@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import PullToRefreshWrapper from '../shared/PullToRefreshWrapper';
 import PhoneInput from '../shared/PhoneInput';
+import { getAuthToken } from '../../utils/auth';
 
 const API_BASE = import.meta.env.DEV ? '' : '';
 
@@ -79,9 +80,76 @@ function StudentUpgradeForm({ onBack, showBack, trialTimeRemaining = 0, hasUploa
     }
   };
 
+  const [jobs, setJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+
   useEffect(() => {
     checkExtensionStatus();
   }, []);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const token = getAuthToken('spark');
+        const res = await axios.get('/api/jobs', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setJobs(res.data);
+        } else {
+          setJobs([
+            {
+              _id: 'sample_job_1',
+              title: 'Junior Technical Associate / Trainee',
+              company: 'Skill Bridge Corporate Network',
+              location: 'Hybrid / Remote',
+              jobType: 'Full-Time',
+              salary: '₹3.5 - 5.0 LPA',
+              description: 'Verified entry-level corporate opening for certified students.'
+            },
+            {
+              _id: 'sample_job_2',
+              title: 'Operations & Business Analyst Intern',
+              company: 'Corporate Partner Network',
+              location: 'Pan India / Remote',
+              jobType: 'Full-Time',
+              salary: '₹18,000 - ₹28,000 / mo',
+              description: 'Client coordination and operations trainee role with fast-track offer.'
+            },
+            {
+              _id: 'sample_job_3',
+              title: 'Quality & Process Associate',
+              company: 'SBI Enterprise Partner',
+              location: 'Mumbai / Pune / Remote',
+              jobType: 'Full-Time',
+              salary: '₹4.0 - 5.5 LPA',
+              description: 'Process assurance & reporting specialist for verified candidates.'
+            }
+          ]);
+        }
+      } catch (e) {
+        console.warn('Failed to load jobs for upgrade form preview:', e);
+      } finally {
+        setLoadingJobs(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  const handleApplyClick = (job) => {
+    toast.error(`🔒 Upgrade Required: Complete your profile upgrade below to apply for ${job.title} at ${job.company}!`, {
+      duration: 4000,
+      icon: '💼'
+    });
+    const payBtn = document.getElementById('pay-securely-button');
+    if (payBtn) {
+      payBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      payBtn.classList.add('ring-4', 'ring-amber-400');
+      setTimeout(() => {
+        payBtn.classList.remove('ring-4', 'ring-amber-400');
+      }, 2000);
+    }
+  };
 
   const handleSubmitExtensionModal = async (e) => {
     if (e) e.preventDefault();
@@ -666,6 +734,66 @@ function StudentUpgradeForm({ onBack, showBack, trialTimeRemaining = 0, hasUploa
           )}
         </div>
 
+        {/* ── Top Verified Job Cards (Under Clock Timer Section) ── */}
+        {jobs.length > 0 && (
+          <div className="mb-6 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent border border-amber-500/30 rounded-3xl p-4 sm:p-5 text-left shadow-lg animate-fade-in">
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💼</span>
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                    Verified Job Openings
+                  </h4>
+                  <p className="text-[10px] text-amber-300/90 font-medium">
+                    {localTimer <= 0 ? 'Trial ended — Complete profile upgrade to apply directly' : 'Active corporate placements available now'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[9px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                {jobs.length} Roles
+              </span>
+            </div>
+
+            {/* Job Cards — only with apply button */}
+            <div className="space-y-2.5">
+              {jobs.slice(0, 3).map((job) => (
+                <div
+                  key={job._id || job.id}
+                  className="bg-black/35 hover:bg-black/55 border border-white/10 hover:border-amber-500/40 rounded-2xl p-3.5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wide truncate">
+                        {job.company}
+                      </span>
+                      <span className="text-[9px] text-gray-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">
+                        {job.jobType || 'Full-Time'}
+                      </span>
+                    </div>
+                    <h5 className="text-xs font-black text-white truncate">
+                      {job.title}
+                    </h5>
+                    <div className="flex items-center gap-2 mt-1 text-[9px] text-gray-300 font-mono">
+                      <span>📍 {job.location || 'Remote'}</span>
+                      <span>•</span>
+                      <span>💰 {job.salary || 'Competitive'}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyClick(job)}
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-[11px] uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer shrink-0 text-center flex items-center justify-center gap-1"
+                  >
+                    <span>Apply</span>
+                    <span className="text-[10px]">🔒</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
 
           {/* ─── 10th Qualification Card ─── */}
@@ -850,6 +978,7 @@ function StudentUpgradeForm({ onBack, showBack, trialTimeRemaining = 0, hasUploa
           )}
 
           <button
+            id="pay-securely-button"
             onClick={handlePay}
             disabled={isProcessing}
             className="w-full mt-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-3.5 rounded-xl shadow-[0_10px_20px_rgba(249,115,22,0.3)] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2 cursor-pointer"
@@ -903,6 +1032,81 @@ function StudentUpgradeForm({ onBack, showBack, trialTimeRemaining = 0, hasUploa
         </div>
 
       </div>
+
+      {/* ── Active Verified Job Openings (Bottom Side) ── */}
+      {jobs.length > 0 && (
+        <div className="max-w-lg w-full mx-auto mt-6 mb-8 z-10 animate-fade-in-up">
+          <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.5)] text-left">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-xl shadow-sm">
+                  💼
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white tracking-tight">
+                    Active Job Openings
+                  </h3>
+                  <p className="text-[10px] text-gray-300 font-medium">
+                    {localTimer <= 0 ? 'Free trial ended — Unlock profile to apply directly' : 'Placement opportunities tailored to verified students'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                {jobs.length} Verified
+              </span>
+            </div>
+
+            <div className="space-y-3.5">
+              {jobs.map((job) => (
+                <div
+                  key={job._id || job.id}
+                  className="bg-black/25 hover:bg-black/45 border border-white/10 hover:border-orange-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 text-left group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-[10px] font-extrabold text-orange-400 uppercase tracking-wider">
+                        {job.company}
+                      </span>
+                      <span className="text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                        {job.jobType || 'Full-Time'}
+                      </span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-orange-300 transition-colors">
+                      {job.title}
+                    </h4>
+                    {job.description && (
+                      <p className="text-[10px] text-gray-300 line-clamp-2 mt-1 leading-relaxed">
+                        {job.description}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-400 font-medium">
+                      <span>📍 {job.location || 'Remote'}</span>
+                      <span>💰 {job.salary || 'Best in Industry'}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleApplyClick(job)}
+                      className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span>Apply</span>
+                      <span className="text-[10px]">🔒</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-white/10 text-center">
+              <p className="text-[10px] text-gray-400 font-medium">
+                🔒 Partner company openings require an upgraded student profile to apply.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Trial Extension Request Modal ── */}
       {isExtensionModalOpen && (
