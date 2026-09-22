@@ -251,9 +251,9 @@ function StudentExam() {
   const rawData = isMentorExam ? [] : (categoryMap[category] || categoryMap.combined);
   const totalQuestions = rawData.length;
 
-  let sizeOptions = [20, 30, 40, 50].filter((s) => s <= totalQuestions);
-  if (sizeOptions.length === 0 && totalQuestions < 20) {
-    if (totalQuestions > 10) sizeOptions.push(10);
+  let sizeOptions = [10, 20, 30, 40, 50].filter((s) => s <= totalQuestions);
+  if (!sizeOptions.includes(10) && totalQuestions >= 10) {
+    sizeOptions.unshift(10);
   }
   const maxCap = Math.min(50, totalQuestions);
   if (!sizeOptions.includes(maxCap)) {
@@ -322,10 +322,10 @@ function StudentExam() {
 
             setMentorExam(res.data);
             const allQs = Array.isArray(res.data.questions) ? res.data.questions : [];
-            const finalQs = !isUnlocked ? allQs.slice(0, 1) : allQs;
+            const finalQs = !isUnlocked ? allQs.slice(0, 10) : allQs;
             setQuestions(finalQs);
             setUserAnswers(Array(finalQs.length).fill(null));
-            setTimeLeft(!isUnlocked ? 60 : (res.data.duration || 15) * 60);
+            setTimeLeft(!isUnlocked ? Math.min(600, (res.data.duration || 15) * 60) : (res.data.duration || 15) * 60);
             setIsConfigured(true);
           } else {
             toast.error('No active mentor exam found.');
@@ -360,29 +360,29 @@ function StudentExam() {
 
             setMentorExam(res.data);
             const allQs = Array.isArray(res.data.questions) ? res.data.questions : [];
-            const finalQs = !isUnlocked ? allQs.slice(0, 1) : allQs;
+            const finalQs = !isUnlocked ? allQs.slice(0, 10) : allQs;
             setQuestions(finalQs);
             setUserAnswers(Array(finalQs.length).fill(null));
-            setTimeLeft(!isUnlocked ? 60 : (res.data.duration || 15) * 60);
+            setTimeLeft(!isUnlocked ? Math.min(600, (res.data.duration || 15) * 60) : (res.data.duration || 15) * 60);
             setIsConfigured(true);
             return;
           }
         } catch (e) {}
 
         if (!isUnlocked) {
-          setQuestionSize(1);
+          setQuestionSize(10);
         } else if (category !== 'combined') {
           setQuestionSize(10);
         } else {
           // Pick dynamic default size for default/combined exams
           const availableData = categoryMap[category] || categoryMap.combined;
           const totalQs = availableData.length;
-          const baseSizes = [20, 30, 40, 50].filter((s) => s <= totalQs);
+          const baseSizes = [10, 20, 30, 40, 50].filter((s) => s <= totalQs);
 
           if (baseSizes.length === 0) {
             setQuestionSize(Math.min(50, totalQs));
           } else {
-            setQuestionSize(baseSizes.includes(20) ? 20 : baseSizes[0]);
+            setQuestionSize(baseSizes.includes(10) ? 10 : baseSizes[0]);
           }
         }
       };
@@ -444,9 +444,10 @@ function StudentExam() {
 
   // Handle starting exam with configured size
   const handleStartExam = () => {
-    // If student is NOT upgraded (locked), force question count to 1.
-    // If student IS upgraded, allow standard question count (10 or configured selection).
-    const targetSize = !isUnlocked ? 1 : parseInt(questionSize, 10);
+    // If student is in trial / unupgraded, cap question count to 10.
+    // If student IS upgraded, allow full question count (20, 30, 40, 50 or configured selection).
+    const parsedSize = parseInt(questionSize, 10) || 10;
+    const targetSize = !isUnlocked ? Math.min(10, parsedSize) : parsedSize;
 
     const sEmail = localStorage.getItem('auth_email') || localStorage.getItem('student_email') || 'student@careerbridge.in';
     let selectedQuestions = isMentorExam 
@@ -463,15 +464,15 @@ function StudentExam() {
       }
     }
 
-    // Force questions array to a maximum of 1 question for unupgraded students
-    const finalQuestions = !isUnlocked ? selectedQuestions.slice(0, 1) : selectedQuestions;
+    // Trial accounts receive up to 10 questions. More than 10 is only for unlocked accounts.
+    const finalQuestions = !isUnlocked ? selectedQuestions.slice(0, 10) : selectedQuestions;
     const finalCount = finalQuestions.length;
 
     setQuestions(finalQuestions);
     setCurrentIndex(0);
     setUserAnswers(Array(finalCount).fill(null));
     setIsCompleted(false);
-    setTimeLeft(finalCount * 60); // 1 minute per question (60s for 1 question)
+    setTimeLeft(finalCount * 60); // 1 minute per question (10 mins for 10 questions)
     setIsConfigured(true);
   };
 
@@ -950,7 +951,7 @@ function StudentExam() {
                   🚀 Preparing a customized exam from the <strong>{currentCategoryName}</strong> bank.{' '}
                   {!isUnlocked ? (
                     <span className="text-amber-900 font-bold block mt-1">
-                      🔒 Free Tier Preview: You will receive 1 question for this assessment. Upgraded accounts receive full 10+ question assessments with certifications.
+                      ℹ️ Trial Allocation: You will receive 10 questions for this assessment. Upgraded accounts can access full 20 to 50-question sets.
                     </span>
                   ) : category === 'combined' ? (
                     `Total database pool size is ${totalQuestions} questions.`
@@ -959,50 +960,77 @@ function StudentExam() {
                   )}
                 </div>
 
-                {/* Size Selector for Combined Assessment or Free Allocation Notice */}
-                {!isUnlocked ? (
-                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-                    <div>
-                      <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
-                        Question Allocation
-                      </p>
-                      <p className="text-xs font-bold text-amber-900 mt-0.5">
-                        1 Question <span className="text-[10px] bg-amber-200/80 text-amber-900 font-extrabold px-1.5 py-0.5 rounded ml-1">Free Tier</span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowUpgradeForm(true)}
-                      className="text-xs font-black text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-3.5 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
-                    >
-                      Unlock 10+ Qs 👑
-                    </button>
-                  </div>
-                ) : category === 'combined' ? (
+                {/* Size Selector for Combined Assessment */}
+                {category === 'combined' ? (
                   <div>
-                    <label className="block text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-3">
-                      Number of Questions
-                    </label>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-xs font-extrabold text-gray-400 uppercase tracking-wider">
+                        Number of Questions
+                      </label>
+                      {!isUnlocked && (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">
+                          10 Qs in Trial
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2.5">
                       {sizeOptions.map((opt) => {
+                        const isLockedForTrial = !isUnlocked && opt > 10;
                         const isSelected = questionSize === opt;
                         return (
                           <button
                             key={opt}
-                            onClick={() => setQuestionSize(opt)}
-                            className={`px-5 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all border ${
+                            type="button"
+                            onClick={() => {
+                              if (isLockedForTrial) {
+                                toast.error('🔒 Upgrade Required: Assessments with more than 10 questions are exclusive to upgraded accounts!');
+                                setShowUpgradeForm(true);
+                                return;
+                              }
+                              setQuestionSize(opt);
+                            }}
+                            className={`px-4 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all border flex items-center gap-1.5 cursor-pointer ${
                               isSelected
-                                ? 'bg-black text-white border-black shadow-md cursor-pointer'
+                                ? 'bg-black text-white border-black shadow-md'
+                                : isLockedForTrial
+                                ? 'bg-gray-50 text-gray-400 border-gray-200 hover:border-amber-300 hover:bg-amber-50/40'
                                 : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                             }`}
                           >
-                            {opt} Qs
+                            <span>{opt} Qs</span>
+                            {isLockedForTrial && <span className="text-[10px]">👑</span>}
                           </button>
                         );
                       })}
                     </div>
+                    {!isUnlocked && (
+                      <div className="mt-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3 flex items-center justify-between">
+                        <span className="text-[11px] text-amber-900 font-semibold">
+                          Want full 20–50 question exams?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowUpgradeForm(true)}
+                          className="text-[11px] font-extrabold text-amber-800 bg-amber-200/80 hover:bg-amber-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Unlock 20-50 Qs 👑
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ) : null}
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-black text-gray-800 uppercase tracking-wider">Question Count</p>
+                      <p className="text-xs font-semibold text-gray-600 mt-0.5">10 Questions</p>
+                    </div>
+                    {!isUnlocked && (
+                      <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
+                        ✓ Trial Access
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Note about starting the exam */}
                 <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-xs font-semibold text-amber-800 flex items-start gap-2.5 shadow-sm leading-relaxed">
@@ -1136,13 +1164,13 @@ function StudentExam() {
                   {!isUnlocked && (
                     <div className="w-full bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 text-center shadow-xs">
                       <p className="text-xs font-bold text-amber-900">
-                        Want complete 10+ question assessments, verified rankings, and official certificates?
+                        Want comprehensive 20 to 50 question assessments, verified rankings, and official certificates?
                       </p>
                       <button
                         onClick={() => setShowUpgradeForm(true)}
                         className="mt-2.5 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-98"
                       >
-                        Upgrade Profile to Unlock All Questions 👑
+                        Upgrade Profile to Unlock 20–50 Questions 👑
                       </button>
                     </div>
                   )}
