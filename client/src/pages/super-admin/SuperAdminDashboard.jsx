@@ -57,6 +57,13 @@ function SuperAdminDashboard() {
   const [extensionRequests, setExtensionRequests] = useState([]);
   const [uploadLogs, setUploadLogs] = useState([]);
 
+  // Student Review Handler State
+  const [reviewsList, setReviewsList] = useState([]);
+  const [reviewCounts, setReviewCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [reviewFilter, setReviewFilter] = useState('all');
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [reviewActionLoadingId, setReviewActionLoadingId] = useState(null);
+
   // Read states for dynamic card highlights (resets when user clicks/opens card)
   const [readJobsCount, setReadJobsCount] = useState(() => Number(localStorage.getItem('supss_read_jobs') || 0));
   const [readApplicationsCount, setReadApplicationsCount] = useState(() => Number(localStorage.getItem('supss_read_applications') || 0));
@@ -322,11 +329,75 @@ function SuperAdminDashboard() {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      setIsLoadingReviews(true);
+      const token = getAuthToken('supss');
+      const res = await axios.get('/api/super-admin/reviews', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data && res.data.success) {
+        setReviewsList(res.data.reviews || []);
+        if (res.data.counts) {
+          setReviewCounts(res.data.counts);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  const handleUpdateReviewStatus = async (reviewId, newStatus) => {
+    try {
+      setReviewActionLoadingId(reviewId);
+      const token = getAuthToken('supss');
+      const res = await axios.put(
+        `/api/super-admin/reviews/${reviewId}/status`,
+        { status: newStatus },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      if (res.data && res.data.success) {
+        toast.success(res.data.message || `Review marked as ${newStatus}`);
+        fetchReviews();
+      }
+    } catch (err) {
+      console.error('Failed to update review status:', err);
+      toast.error(err.response?.data?.error || 'Failed to update review status.');
+    } finally {
+      setReviewActionLoadingId(null);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this student review?')) {
+      return;
+    }
+    try {
+      setReviewActionLoadingId(reviewId);
+      const token = getAuthToken('supss');
+      const res = await axios.delete(`/api/super-admin/reviews/${reviewId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data && res.data.success) {
+        toast.success('Review deleted permanently.');
+        fetchReviews();
+      }
+    } catch (err) {
+      console.error('Failed to delete review:', err);
+      toast.error(err.response?.data?.error || 'Failed to delete review.');
+    } finally {
+      setReviewActionLoadingId(null);
+    }
+  };
+
   useEffect(() => {
     fetchUploadLogs();
     fetchCommunications();
     fetchRetentionSettings();
     fetchGroqKeySettings();
+    fetchReviews();
   }, []);
 
   useEffect(() => {
@@ -404,7 +475,8 @@ function SuperAdminDashboard() {
         fetchCommunications().catch(() => null),
         fetchRetentionSettings().catch(() => null),
         fetchGroqKeySettings().catch(() => null),
-        fetchBackupStatus().catch(() => null)
+        fetchBackupStatus().catch(() => null),
+        fetchReviews().catch(() => null)
       ]);
 
       const statsRes = results[0];
@@ -877,6 +949,177 @@ function SuperAdminDashboard() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        </div>
+
+        {/* Student Review Handler (Dedicated Management Queue) */}
+        <div className={`${reviewCounts.pending > 0
+          ? 'bg-amber-50/90 border-2 border-amber-500 shadow-lg shadow-amber-100/50'
+          : 'bg-white/80 backdrop-blur-lg border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
+          } rounded-3xl p-5 md:p-6 flex flex-col text-left transition-all duration-300`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-amber-700 uppercase tracking-wider block">Candidate Feedback</span>
+                {reviewCounts.pending > 0 && (
+                  <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse">
+                    ⭐ {reviewCounts.pending} Pending Review{reviewCounts.pending > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xl md:text-2xl font-black tracking-tight mt-1 text-gray-900 leading-none">Review Handler</h3>
+              <p className="text-xs text-gray-500 font-semibold mt-1">
+                Audit, approve, reject, or delete student-submitted reviews. Only approved reviews are displayed in the landing page carousel.
+              </p>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 bg-gray-100/90 p-1 rounded-2xl shrink-0 self-start sm:self-center">
+              {[
+                { id: 'all', label: 'All', count: reviewCounts.total },
+                { id: 'pending', label: 'Pending', count: reviewCounts.pending },
+                { id: 'approved', label: 'Approved', count: reviewCounts.approved },
+                { id: 'rejected', label: 'Rejected', count: reviewCounts.rejected }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setReviewFilter(tab.id)}
+                  type="button"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    reviewFilter === tab.id
+                      ? 'bg-white text-gray-900 shadow-xs'
+                      : 'text-gray-500 hover:text-gray-800'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    tab.id === 'pending' && tab.count > 0
+                      ? 'bg-amber-200 text-amber-900'
+                      : 'bg-gray-200/70 text-gray-700'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* List of Reviews */}
+          <div className="space-y-3 mt-2 max-h-96 overflow-y-auto pr-1">
+            {reviewsList.filter(r => reviewFilter === 'all' ? true : r.status === reviewFilter).length === 0 ? (
+              <div className="text-center py-8 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                No reviews found under the "{reviewFilter}" filter.
+              </div>
+            ) : (
+              reviewsList
+                .filter(r => reviewFilter === 'all' ? true : r.status === reviewFilter)
+                .map((rev) => {
+                  const isApproved = rev.status === 'approved';
+                  const isPending = rev.status === 'pending';
+                  const isRejected = rev.status === 'rejected';
+
+                  return (
+                    <div
+                      key={rev._id}
+                      className="p-4 rounded-2xl border border-gray-100 bg-white hover:border-gray-200 transition-all duration-200 shadow-xs flex flex-col gap-3"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-xs shrink-0">
+                            {rev.name ? rev.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'S'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-gray-900">{rev.name}</span>
+                              <span className="text-[10px] text-gray-400 font-mono">({rev.email || 'No email provided'})</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-purple-700 bg-purple-50 border border-purple-100 rounded-full px-2 py-0.5 font-bold">
+                                {rev.role || 'Verified Candidate'}
+                              </span>
+                              <div className="flex items-center gap-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-xs ${i < (rev.rating || 5) ? 'text-amber-400' : 'text-gray-200'}`}
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Badge & Actions */}
+                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                            isApproved
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : isPending
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-rose-50 text-rose-700 border-rose-200'
+                          }`}>
+                            <span>{isApproved ? '🟢' : isPending ? '🟡' : '🔴'}</span>
+                            <span>{rev.status || 'pending'}</span>
+                          </span>
+
+                          {/* Action buttons */}
+                          {!isApproved && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateReviewStatus(rev._id, 'approved')}
+                              disabled={reviewActionLoadingId === rev._id}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold uppercase px-3 py-1.5 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                            >
+                              <span>✓</span>
+                              <span>Approve</span>
+                            </button>
+                          )}
+
+                          {!isRejected && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateReviewStatus(rev._id, 'rejected')}
+                              disabled={reviewActionLoadingId === rev._id}
+                              className="bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-extrabold uppercase px-3 py-1.5 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                            >
+                              <span>✕</span>
+                              <span>Reject</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(rev._id)}
+                            disabled={reviewActionLoadingId === rev._id}
+                            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 transition-colors active:scale-95 cursor-pointer disabled:opacity-50"
+                            title="Delete review permanently"
+                            aria-label="Delete review"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Review message text */}
+                      <div className="bg-gray-50/80 rounded-xl p-3 border border-gray-100 text-xs text-gray-700 font-medium italic leading-relaxed">
+                        "{rev.reviewText}"
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-gray-400">
+                        <span>Submitted on: {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        {isApproved && <span className="text-emerald-600 font-bold">✓ Live in Landing Page Carousel</span>}
+                        {isPending && <span className="text-amber-600 font-bold">⏳ Awaiting Super Admin Verification</span>}
+                        {isRejected && <span className="text-rose-500 font-bold">Hidden from Public</span>}
+                      </div>
+                    </div>
+                  );
+                })
             )}
           </div>
         </div>

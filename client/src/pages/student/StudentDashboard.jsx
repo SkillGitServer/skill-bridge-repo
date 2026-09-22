@@ -9,6 +9,7 @@ import LanguageSwitcher from '../../components/shared/LanguageSwitcher';
 import PullToRefreshWrapper from '../../components/shared/PullToRefreshWrapper';
 import { logoutUser, getAuthToken } from '../../utils/auth';
 import BridgeAIWidget from '../../components/student/BridgeAIWidget';
+import StudentReviewModal from '../../components/student/StudentReviewModal';
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -1204,6 +1205,12 @@ function StudentDashboard() {
         mentor={assignedMentor}
         mentorExam={mentorExam}
         studentName={studentName}
+      />
+
+      {/* Student Review & Feedback Popup */}
+      <StudentReviewModal
+        studentName={studentName}
+        studentEmail={studentEmail}
       />
       </div>
     </PullToRefreshWrapper>

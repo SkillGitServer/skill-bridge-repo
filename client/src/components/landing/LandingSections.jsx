@@ -28,6 +28,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../utils/api';
+import StudentReviewCarousel from './StudentReviewCarousel';
 
 // ─── Section Wrapper ─────────────────────────────────────────────────────────
 function Section({ id, children, className = '' }) {
@@ -841,6 +842,7 @@ export default function LandingSections({ contentOverride, isEditing, onFieldCha
         <WhyChooseUs contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <HowItWorks contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <CandidateBenefits contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
+        <StudentReviewCarousel />
         <AboutUs contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <FAQ contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
       </div>
