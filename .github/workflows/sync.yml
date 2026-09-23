@@ -7,22 +7,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-sync:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Push to Destination Repository
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.RENDER_REPO_PAT }}
-        with:
-          source-directory: '.'
-          destination-github-username: 'SkillGitServer'
-          destination-repository-name: 'skill-bridge-repo'
-          user-email: 'dev@skillbridge.in'
-          target-branch: 'main'
-          commit-message: 'Automated mirror sync from source repository [skip ci]'
+        run: |
+          git config --global user.name "SkillGitServer"
+          git config --global user.email "dev@skillbridge.in"
+          git remote add destination "https://x-access-token:${{ secrets.RENDER_REPO_PAT }}@github.com/SkillGitServer/skill-bridge-repo.git"
+          git push destination main --force
