@@ -494,31 +494,35 @@ export default function StudentReviewCarousel() {
 
       {/* ── View All Placed Candidates Modal ── */}
       {isAllModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in select-none">
-          <div className="relative w-full max-w-5xl max-h-[90vh] bg-white/90 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-left animate-scale-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/65 backdrop-blur-xl animate-fade-in select-none">
+          <div className="relative w-full max-w-5xl max-h-[90vh] bg-gradient-to-b from-[#fbfbfa]/95 via-[#f8f6f2]/95 to-[#fbfbfa]/95 backdrop-blur-3xl border border-white/90 rounded-[32px] sm:rounded-[36px] shadow-[0_30px_90px_rgba(0,0,0,0.25),0_1px_3px_rgba(255,255,255,0.9)_inset] flex flex-col overflow-hidden text-left animate-scale-in">
+            {/* Ambient luxury glows */}
+            <div className="absolute -top-16 -right-16 w-80 h-80 bg-gradient-to-bl from-amber-400/25 via-yellow-300/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -left-16 w-80 h-80 bg-gradient-to-tr from-indigo-500/15 via-purple-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
             {/* Modal Header */}
-            <div className="p-5 md:p-6 border-b border-gray-200/70 flex items-center justify-between gap-4 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent">
+            <div className="relative z-10 p-5 sm:p-6 border-b border-gray-200/50 flex items-center justify-between gap-4 bg-white/40 backdrop-blur-md">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider border border-amber-200">
-                  <Award size={12} />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-300/60 text-[10px] font-black uppercase tracking-wider">
+                  <Award size={13} className="text-amber-600" />
                   <span>National Placement Hall of Fame</span>
                 </span>
-                <h3 className="text-xl md:text-2xl font-black text-gray-900 mt-1">
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 mt-1 tracking-tight">
                   Placed Candidates ({filteredAll.length})
                 </h3>
               </div>
 
               <button
                 onClick={() => setIsAllModalOpen(false)}
-                className="p-2.5 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 shadow-sm cursor-pointer transition-all active:scale-95"
+                className="w-10 h-10 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 hover:border-gray-300 text-gray-700 shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all"
                 aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Search Input */}
-            <div className="p-4 md:px-6 border-b border-gray-100 bg-white/50">
+            {/* Search Input Bar */}
+            <div className="relative z-10 px-5 sm:px-6 py-3.5 border-b border-gray-200/50 bg-white/30 backdrop-blur-md">
               <div className="relative w-full max-w-md">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -526,82 +530,128 @@ export default function StudentReviewCarousel() {
                   value={allSearchTerm}
                   onChange={(e) => setAllSearchTerm(e.target.value)}
                   placeholder="Search by candidate name, company, or role..."
-                  className="w-full pl-10 pr-4 py-2 text-xs font-semibold bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 shadow-2xs"
+                  className="w-full pl-10 pr-4 py-2 text-xs font-semibold bg-white/80 border border-gray-200/80 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 shadow-2xs backdrop-blur-sm"
                 />
               </div>
             </div>
 
             {/* Grid of All Candidates */}
-            <div className="flex-1 overflow-y-auto p-5 md:p-6">
+            <div className="relative z-10 flex-1 overflow-y-auto p-5 sm:p-6 md:p-8">
               {isLoadingAll ? (
-                <div className="py-20 text-center">
+                <div className="py-24 text-center">
                   <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                  <p className="text-xs font-bold text-gray-500">Loading placed candidates...</p>
+                  <p className="text-xs font-bold text-gray-500">Loading verified placed candidates...</p>
                 </div>
               ) : filteredAll.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredAll.map((item, idx) => (
                     <div
                       key={item._id || idx}
-                      className="group relative bg-white/70 hover:bg-white backdrop-blur-xl border border-gray-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left"
+                      className="group relative bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/90 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_35px_rgba(0,0,0,0.05),0_1px_2px_rgba(255,255,255,0.8)_inset] hover:shadow-[0_20px_50px_rgba(245,158,11,0.14)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between text-left overflow-hidden"
                     >
-                      <div>
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          {/* Cutout silhouette */}
-                          <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
-                            {item.photo ? (
-                              <img
-                                src={item.photo}
-                                alt={item.name}
-                                className="w-full h-full object-contain filter drop-shadow-[0_10px_14px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform select-none"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-lg font-black shadow-sm">
-                                {getInitials(item.name)}
-                              </div>
-                            )}
-                          </div>
+                      {/* Ambient background glow inside card */}
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-40 h-40 bg-gradient-to-tr from-amber-400/25 via-yellow-300/15 to-orange-400/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
 
-                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0">
-                            <CheckCircle2 size={11} className="text-emerald-600" />
+                      <div className="relative z-10">
+                        {/* Top Badges Row */}
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 border border-amber-300/60 text-[9px] font-black uppercase tracking-wider">
+                            <Sparkles size={10} className="text-amber-600" />
+                            <span>Direct Hire</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-300/70 text-[9px] font-black shadow-2xs">
+                            <CheckCircle2 size={10} className="text-emerald-600" />
                             <span>Placed</span>
-                          </div>
+                          </span>
                         </div>
 
-                        <h4 className="font-extrabold text-gray-900 text-base leading-tight mt-1">
-                          {item.name || 'Verified Candidate'}
-                        </h4>
+                        {/* Cutout Portrait with Halo */}
+                        <div className="relative w-full h-44 sm:h-48 flex items-center justify-center my-1">
+                          <div className="absolute w-32 h-32 sm:w-36 sm:h-36 bg-gradient-to-tr from-amber-400/30 via-yellow-300/20 to-orange-400/15 rounded-full blur-xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+                          {item.photo ? (
+                            <img
+                              src={item.photo}
+                              alt={item.name}
+                              className="relative z-10 max-h-full max-w-full object-contain filter drop-shadow-[0_16px_22px_rgba(0,0,0,0.22)] select-none pointer-events-none anim-float-avatar"
+                            />
+                          ) : (
+                            <div className="relative z-10 w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-2xl font-black shadow-md border-2 border-amber-300">
+                              {getInitials(item.name)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Candidate Name */}
+                        <div className="text-center mt-3 mb-2">
+                          <h4 className="font-black text-gray-900 text-lg leading-tight group-hover:text-amber-900 transition-colors">
+                            {item.name || 'Verified Candidate'}
+                          </h4>
+                          <span className="text-[10px] font-semibold text-gray-400 block mt-0.5">
+                            Skill Bridge India Alumni
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Building size={13} className="text-amber-600 shrink-0" />
-                          <span className="text-xs font-bold text-gray-900 truncate">
-                            {item.company || 'Corporate Partner'}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Briefcase size={13} className="text-indigo-600 shrink-0" />
-                          <span className="text-xs font-semibold text-gray-700 truncate">
-                            {item.role || 'Role'}
-                          </span>
-                        </div>
-
-                        {item.joiningDate && (
-                          <div className="flex items-center gap-2">
-                            <Calendar size={13} className="text-teal-600 shrink-0" />
-                            <span className="text-[11px] font-medium text-gray-500 truncate">
-                              {item.joiningDate}
+                      {/* Vertically Stacked Placement Details */}
+                      <div className="relative z-10 mt-3 pt-3 border-t border-gray-200/50 space-y-2">
+                        {/* Company */}
+                        <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-400/10 text-amber-900 border border-amber-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Building size={15} className="text-amber-700" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                              Company / Organization
                             </span>
+                            <h5 className="text-xs sm:text-sm font-extrabold text-gray-900 truncate mt-0.5">
+                              {item.company || 'Corporate Partner'}
+                            </h5>
+                          </div>
+                        </div>
+
+                        {/* Role */}
+                        <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/10 text-indigo-900 border border-indigo-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Briefcase size={15} className="text-indigo-700" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                              Job Role / Designation
+                            </span>
+                            <h5 className="text-xs sm:text-sm font-extrabold text-gray-900 truncate mt-0.5">
+                              {item.role || 'Professional Role'}
+                            </h5>
+                          </div>
+                        </div>
+
+                        {/* Joined Date */}
+                        {item.joiningDate && (
+                          <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/10 text-teal-900 border border-teal-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                              <Calendar size={15} className="text-teal-700" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                                Joining Date
+                              </span>
+                              <h5 className="text-xs sm:text-sm font-extrabold text-gray-900 truncate mt-0.5">
+                                {item.joiningDate}
+                              </h5>
+                            </div>
                           </div>
                         )}
+
+                        {/* Verification Tag */}
+                        <div className="pt-1.5 flex items-center justify-center gap-1.5 text-[9px] font-bold text-gray-400">
+                          <ShieldCheck size={12} className="text-emerald-600 shrink-0" />
+                          <span>Verified on National Placement Network</span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-16 text-center text-gray-400">
+                <div className="py-20 text-center text-gray-400">
                   <p className="text-sm font-semibold">No placed candidates found matching "{allSearchTerm}".</p>
                 </div>
               )}
