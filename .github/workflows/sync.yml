@@ -1,0 +1,27 @@
+name: Sync to Render Deployment Repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Destination Repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.RENDER_REPO_PAT }}
+        with:
+          source-directory: '.'
+          destination-github-username: 'SkillGitServer'
+          destination-repository-name: 'skill-bridge-repo'
+          user-email: 'dev@skillbridge.in'
+          target-branch: 'main'
+          commit-message: 'Automated mirror sync from source repository [skip ci]'
