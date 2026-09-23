@@ -17,30 +17,37 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       default: ''
     },
-    role: {
+    photo: {
       type: String,
-      default: 'Verified Candidate',
+      default: ''
+    },
+    company: {
+      type: String,
+      required: true,
       trim: true
     },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-      default: 5
-    },
-    reviewText: {
+    role: {
       type: String,
       required: true,
+      trim: true
+    },
+    joiningDate: {
+      type: String,
+      default: '',
       trim: true
     },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
+      default: 'approved',
       index: true
     },
-    avatar: {
+    // Optional legacy fields for backwards compatibility
+    rating: {
+      type: Number,
+      default: 5
+    },
+    reviewText: {
       type: String,
       default: ''
     }

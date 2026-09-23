@@ -89,8 +89,11 @@ const studentSchema = new mongoose.Schema({
     link: { type: String, default: '/student/resume' },
     timestamp: { type: Date, default: Date.now },
     unread: { type: Boolean, default: true }
-  }]
+  }],
 
+  // Super Admin Review Request Flag
+  reviewRequested: { type: Boolean, default: false },
+  reviewRequestedAt: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);

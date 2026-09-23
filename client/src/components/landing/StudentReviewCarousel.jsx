@@ -1,50 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Star, Quote, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building, Briefcase, Calendar, CheckCircle2, Sparkles } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/api';
 
 const DEFAULT_FALLBACK_REVIEWS = [
   {
-    _id: 'd-1',
+    _id: 'fb-p1',
     name: 'Aarav Sharma',
-    role: 'Full Stack Trainee',
-    rating: 5,
-    reviewText: 'Skill Bridge India gave me clarity on my technical competencies and helped me pinpoint exactly what areas to improve for placement interviews.'
+    company: 'Tata Consultancy Services',
+    role: 'Full Stack Engineer',
+    joiningDate: 'August 2026',
+    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   },
   {
-    _id: 'd-2',
+    _id: 'fb-p2',
     name: 'Pooja Verma',
-    role: 'Data Science Candidate',
-    rating: 5,
-    reviewText: 'The assessment test was challenging and directly aligned with modern job roles. Getting instant feedback boosted my confidence tremendously!'
+    company: 'ICICI Bank',
+    role: 'Business Data Analyst',
+    joiningDate: 'September 2026',
+    photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   },
   {
-    _id: 'd-3',
+    _id: 'fb-p3',
     name: 'Rohan Deshmukh',
-    role: 'Computer Engineering Student',
-    rating: 5,
-    reviewText: 'Clean interface, seamless resume evaluation, and genuine placement guidance. Highly recommended for every final year candidate.'
+    company: 'Infosys Limited',
+    role: 'Associate Software Developer',
+    joiningDate: 'July 2026',
+    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   },
   {
-    _id: 'd-4',
+    _id: 'fb-p4',
     name: 'Sneha Patel',
-    role: 'Business Analytics Aspirant',
-    rating: 5,
-    reviewText: 'The mentor evaluations and tailored career recommendations made my job hunt so much more structured. Truly transformative platform.'
+    company: 'Accenture India',
+    role: 'Cloud Operations Trainee',
+    joiningDate: 'September 2026',
+    photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   },
   {
-    _id: 'd-5',
+    _id: 'fb-p5',
     name: 'Vikram Joshi',
-    role: 'Software Development Candidate',
-    rating: 5,
-    reviewText: 'Verified certificates and direct company interview opportunities — Skill Bridge India bridged the gap between college and my first tech job.'
+    company: 'Wipro Technologies',
+    role: 'Systems Engineer',
+    joiningDate: 'August 2026',
+    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   },
   {
-    _id: 'd-6',
+    _id: 'fb-p6',
     name: 'Ananya Iyer',
-    role: 'AI & ML Trainee',
-    rating: 5,
-    reviewText: 'Great experience! The automated reports are comprehensive and the platform runs smoothly without any friction.'
+    company: 'Cognizant',
+    role: 'AI Solutions Specialist',
+    joiningDate: 'September 2026',
+    photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
+    status: 'approved'
   }
 ];
 
@@ -63,8 +75,7 @@ export default function StudentReviewCarousel() {
           setReviews(res.data.reviews);
         }
       } catch (err) {
-        // Fallback to default reviews silently
-        console.warn('Could not fetch remote reviews, showing default verified candidate reviews.', err.message);
+        console.warn('Could not fetch placement reviews, displaying fallback stories:', err.message);
       }
     };
 
@@ -74,18 +85,17 @@ export default function StudentReviewCarousel() {
     };
   }, []);
 
-  // Auto scroll effect
+  // Smooth auto-scroll loop
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
     let animationFrameId;
-    const scrollSpeed = 0.75; // Smooth slow scroll
+    const scrollSpeed = 0.75;
 
     const step = () => {
       if (!isPaused && el) {
         el.scrollLeft += scrollSpeed;
-        // Infinite wrap: when scrolled half way (since content is duplicated)
         if (el.scrollLeft >= el.scrollWidth / 2) {
           el.scrollLeft = 0;
         }
@@ -107,11 +117,10 @@ export default function StudentReviewCarousel() {
     }
   };
 
-  // Duplicate items for continuous infinite marquee loop
   const displayItems = [...reviews, ...reviews];
 
   const getInitials = (name) => {
-    if (!name) return 'S';
+    if (!name) return 'C';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -120,14 +129,12 @@ export default function StudentReviewCarousel() {
       .toUpperCase();
   };
 
-  const getAvatarGradient = (idx) => {
+  const getCardGradient = (idx) => {
     const gradients = [
-      'from-orange-500 to-amber-500',
-      'from-teal-500 to-emerald-500',
-      'from-purple-500 to-indigo-500',
-      'from-sky-500 to-blue-500',
-      'from-pink-500 to-rose-500',
-      'from-violet-500 to-fuchsia-500'
+      'from-amber-500/10 via-orange-500/5 to-white/90',
+      'from-indigo-500/10 via-purple-500/5 to-white/90',
+      'from-teal-500/10 via-emerald-500/5 to-white/90',
+      'from-sky-500/10 via-blue-500/5 to-white/90'
     ];
     return gradients[idx % gradients.length];
   };
@@ -138,33 +145,34 @@ export default function StudentReviewCarousel() {
       className="relative py-20 px-4 md:px-6 overflow-hidden bg-transparent select-none"
     >
       <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Header (Matching Candidate Benefits & About Us Design System) */}
+        {/* Section Header */}
         <div className="text-center mb-12 space-y-3">
-          <span className="inline-block bg-gray-900 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xs">
-            Student Voices
+          <span className="inline-flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xs">
+            <Sparkles size={13} className="text-amber-400" />
+            <span>Placement Success</span>
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-            Loved by candidates nationwide.
+            Real Candidates. Real Careers.
           </h2>
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Real feedback from ambitious learners taking their careers to the next level.
+            Meet the ambitious learners from Skill Bridge India who verified their skills and secured top industry placements.
           </p>
 
-          {/* Navigation arrow helpers */}
+          {/* Navigation Controls */}
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => handleManualScroll('left')}
-              aria-label="Previous review"
+              aria-label="Previous story"
               className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-700 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <ChevronLeft size={18} />
             </button>
             <span className="text-xs font-semibold text-gray-400">
-              Auto-rotating {reviews.length} reviews
+              Auto-rotating {reviews.length} candidate placements
             </span>
             <button
               onClick={() => handleManualScroll('right')}
-              aria-label="Next review"
+              aria-label="Next story"
               className="p-2.5 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-700 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <ChevronRight size={18} />
@@ -172,7 +180,7 @@ export default function StudentReviewCarousel() {
           </div>
         </div>
 
-        {/* Carousel Marquee Container */}
+        {/* Carousel Container */}
         <div
           className="relative w-full overflow-hidden"
           onMouseEnter={() => setIsPaused(true)}
@@ -180,75 +188,101 @@ export default function StudentReviewCarousel() {
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
         >
-          {/* Edge blur gradients */}
+          {/* Edge Blur Gradients */}
           <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-white/90 to-transparent z-10" />
           <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-white/90 to-transparent z-10" />
 
-          {/* Scrolling track */}
+          {/* Scrolling Track */}
           <div
             ref={scrollRef}
             className="flex gap-5 overflow-x-hidden py-4 scroll-smooth no-scrollbar"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {displayItems.map((item, idx) => {
-              const stars = Math.max(1, Math.min(5, Number(item.rating) || 5));
-              const gradient = getAvatarGradient(idx);
+              const bgGradient = getCardGradient(idx);
 
               return (
                 <div
                   key={`${item._id || idx}-${idx}`}
-                  className="flex-shrink-0 w-[300px] sm:w-[340px] bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-sm hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                  className={`flex-shrink-0 w-[290px] sm:w-[320px] bg-gradient-to-br ${bgGradient} backdrop-blur-xl border border-white/70 rounded-3xl p-5 shadow-sm hover:shadow-[0_16px_40px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between text-left`}
                 >
                   <div>
-                    {/* Top row: Star rating + Quote icon */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, sIdx) => (
-                          <Star
-                            key={sIdx}
-                            size={16}
-                            className={
-                              sIdx < stars
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'fill-gray-200 text-gray-200'
-                            }
+                    {/* Top Row: Candidate Photo without background + Verified Badge */}
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      {item.photo ? (
+                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-md border-2 border-amber-300 bg-white/40 p-0.5">
+                          <img
+                            src={item.photo}
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded-xl"
                           />
-                        ))}
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-xl font-black shadow-md border-2 border-amber-300">
+                          {getInitials(item.name)}
+                        </div>
+                      )}
+
+                      <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0 shadow-2xs">
+                        <CheckCircle2 size={12} className="text-emerald-600" />
+                        <span>Placed Candidate</span>
                       </div>
-                      <Quote size={20} className="text-gray-300" />
                     </div>
 
-                    {/* Review text */}
-                    <p className="text-gray-700 text-sm leading-relaxed line-clamp-4 font-medium italic">
-                      "{item.reviewText}"
-                    </p>
+                    {/* Candidate Name */}
+                    <h3 className="font-extrabold text-gray-900 text-base leading-tight">
+                      {item.name || 'Verified Candidate'}
+                    </h3>
                   </div>
 
-                  {/* Student author info */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} text-white flex items-center justify-center text-xs font-black shadow-sm shrink-0`}
-                      >
-                        {getInitials(item.name)}
+                  {/* Placement Details Card */}
+                  <div className="mt-4 pt-3 border-t border-gray-200/60 space-y-2">
+                    {/* Company (Where they got the job) */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center shrink-0">
+                        <Building size={13} />
                       </div>
                       <div className="overflow-hidden">
-                        <h4 className="font-bold text-gray-900 text-sm truncate">
-                          {item.name || 'Verified Candidate'}
-                        </h4>
-                        <p className="text-gray-400 text-xs font-medium truncate">
-                          {item.role || 'Student'}
-                        </p>
+                        <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider leading-none">
+                          Company
+                        </span>
+                        <span className="text-xs font-black text-gray-900 truncate block">
+                          {item.company || 'Direct Corporate Placement'}
+                        </span>
                       </div>
                     </div>
 
-                    <div
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold shrink-0"
-                      title="Verified Student Review"
-                    >
-                      <CheckCircle2 size={11} className="text-emerald-600" />
-                      <span>Verified</span>
+                    {/* Role in the job */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-100/80 text-indigo-800 flex items-center justify-center shrink-0">
+                        <Briefcase size={13} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider leading-none">
+                          Role
+                        </span>
+                        <span className="text-xs font-bold text-gray-800 truncate block">
+                          {item.role || 'Full Time Role'}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Date joined */}
+                    {item.joiningDate && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-teal-100/80 text-teal-800 flex items-center justify-center shrink-0">
+                          <Calendar size={13} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <span className="text-[10px] font-bold text-gray-400 block uppercase tracking-wider leading-none">
+                            Joined
+                          </span>
+                          <span className="text-[11px] font-bold text-gray-700 truncate block">
+                            {item.joiningDate}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

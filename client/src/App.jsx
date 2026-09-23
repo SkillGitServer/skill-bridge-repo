@@ -45,6 +45,7 @@ import SuperAdminPublishedExams from './pages/super-admin/SuperAdminPublishedExa
 import SuperAdminRevenue from './pages/super-admin/SuperAdminRevenue';
 import SuperAdminJobs from './pages/super-admin/SuperAdminJobs';
 import SuperAdminPasskeys from './pages/super-admin/SuperAdminPasskeys';
+import SuperAdminReviews from './pages/super-admin/SuperAdminReviews';
 import AdminJobs from './pages/admin/AdminJobs';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentProfile from './pages/student/StudentProfile';
@@ -296,6 +297,8 @@ function AppRoutes() {
               <Route path="/super_admin/passkeys" element={<SuperAdminPasskeys />} />
               <Route path="/super-admin/devices" element={<DeviceManagement />} />
               <Route path="/super_admin/devices" element={<DeviceManagement />} />
+              <Route path="/super-admin/reviews" element={<SuperAdminReviews />} />
+              <Route path="/super_admin/reviews" element={<SuperAdminReviews />} />
             </Route>
 
             {/* Maintenance Gatekeeper protecting all other routes */}

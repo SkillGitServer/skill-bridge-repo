@@ -9,7 +9,7 @@ import LanguageSwitcher from '../../components/shared/LanguageSwitcher';
 import PullToRefreshWrapper from '../../components/shared/PullToRefreshWrapper';
 import { logoutUser, getAuthToken } from '../../utils/auth';
 import BridgeAIWidget from '../../components/student/BridgeAIWidget';
-import StudentReviewModal from '../../components/student/StudentReviewModal';
+import GoldenReviewModal from '../../components/student/GoldenReviewModal';
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -359,6 +359,8 @@ function StudentDashboard() {
   const [hasUploadedResume, setHasUploadedResume] = useState(false);
   const [assignedMentor, setAssignedMentor] = useState(null);
   const [assignedMentorPhoto, setAssignedMentorPhoto] = useState(() => localStorage.getItem('admin_profile_photo') || '');
+  const [hasReviewRequest, setHasReviewRequest] = useState(false);
+  const [isGoldenReviewModalOpen, setIsGoldenReviewModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchStudentProfileAndRank = async () => {
@@ -395,7 +397,26 @@ function StudentDashboard() {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
               }) : 'Just now'
             })));
+
+            const hasReviewReq = profileRes.data.notifications.some(
+              n => n.type === 'SuperAdmin Review Request' && n.unread
+            );
+            if (hasReviewReq || profileRes.data.reviewRequested) {
+              setHasReviewRequest(true);
+              setIsGoldenReviewModalOpen(true);
+            }
           }
+
+          // Check remote review request status
+          try {
+            const revRes = await axios.get('/api/reviews/my-status', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (revRes.data?.hasPendingRequest) {
+              setHasReviewRequest(true);
+              setIsGoldenReviewModalOpen(true);
+            }
+          } catch (e) {}
         }
 
         // Fetch dynamic leaderboard rank
@@ -461,16 +482,6 @@ function StudentDashboard() {
     touchEndXRef.current = e.targetTouches[0].clientX;
   };
 
-  const handleWidgetTouchEnd = () => {
-    if (!showGoldenExamCard || notifications.length === 0) return;
-    const diff = touchStartXRef.current - touchEndXRef.current;
-    if (diff > 40) {
-      setActiveWidgetIndex(1);
-    } else if (diff < -40) {
-      setActiveWidgetIndex(0);
-    }
-  };
-
   const isExamAttempted = mentorExam && mentorExam._id && (
     localStorage.getItem(`attempted_mentor_exam_${mentorExam._id}`) === 'true' ||
     localStorage.getItem(`completed_mentor_exam_${mentorExam._id}`) === 'true'
@@ -481,11 +492,26 @@ function StudentDashboard() {
     isUnlocked && mentorExam && mentorExam._id && mentorExam.isActive && !isExamAttempted
   );
 
+  const widgetSlides = [];
+  if (hasReviewRequest) widgetSlides.push('review');
+  if (showGoldenExamCard) widgetSlides.push('exam');
+  widgetSlides.push('messages');
+
+  const handleWidgetTouchEnd = () => {
+    if (widgetSlides.length <= 1) return;
+    const diff = touchStartXRef.current - touchEndXRef.current;
+    if (diff > 40) {
+      setActiveWidgetIndex((prev) => (prev + 1) % widgetSlides.length);
+    } else if (diff < -40) {
+      setActiveWidgetIndex((prev) => (prev - 1 + widgetSlides.length) % widgetSlides.length);
+    }
+  };
+
   useEffect(() => {
-    if (!showGoldenExamCard && activeWidgetIndex !== 0) {
+    if (activeWidgetIndex >= widgetSlides.length) {
       setActiveWidgetIndex(0);
     }
-  }, [showGoldenExamCard, activeWidgetIndex]);
+  }, [widgetSlides.length, activeWidgetIndex]);
 
   const handleStartTakeExam = async () => {
     const activeId = mentorExam ? mentorExam._id : null;
@@ -546,6 +572,11 @@ function StudentDashboard() {
 
   const handleNotificationClick = async (item) => {
     const targetId = item.id || item._id;
+
+    // Check if notification is a review request
+    if (item.type === 'SuperAdmin Review Request' || (item.subject && item.subject.toLowerCase().includes('review'))) {
+      setIsGoldenReviewModalOpen(true);
+    }
 
     // 1. Open in-page notification detail modal card
     setSelectedNotifModal(item);
@@ -726,11 +757,62 @@ function StudentDashboard() {
             onTouchEnd={handleWidgetTouchEnd}
           >
             <div className="relative w-full min-h-[260px] sm:min-h-[220px] overflow-hidden rounded-3xl">
-              {/* ── Slide 0: Golden Exam Card (Upgraded Candidates Only) ── */}
+              {/* ── Slide: Golden Placement Review Request (Super Admin Broadcast) ── */}
+              {hasReviewRequest && (
+                <div 
+                  className={`w-full h-full min-h-[260px] sm:min-h-[220px] bg-gradient-to-br from-[#3b2a00] via-[#1a1400] to-black border-2 border-amber-400 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.4)] flex flex-col justify-between p-4 sm:p-5 hover:shadow-[0_0_65px_rgba(245,158,11,0.55)] text-left group transition-all duration-300 ease-in-out ${
+                    widgetSlides[activeWidgetIndex] === 'review'
+                      ? 'relative z-10 opacity-100 translate-x-0 pointer-events-auto' 
+                      : 'absolute inset-0 z-0 opacity-0 -translate-x-full pointer-events-none'
+                  }`}
+                >
+                  {/* Metallic Golden Decorative Glows */}
+                  <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-bl from-yellow-400/30 to-amber-500/0 rounded-full blur-[45px] pointer-events-none animate-float" />
+                  <div className="absolute bottom-0 left-0 w-28 h-28 bg-amber-500/25 rounded-full blur-[35px] pointer-events-none animate-float delay-300" />
+
+                  <div className="relative z-10 flex flex-col justify-between h-full space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-amber-400/25 border border-amber-400/60 text-amber-300 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+                          👑 SUPER ADMIN PLACEMENT VERIFICATION
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-sm border border-amber-300">
+                          ⚡ Action Required
+                        </span>
+                      </div>
+
+                      <div className="shrink-0 bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-[10px] sm:text-xs px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl shadow-md border border-amber-300 flex items-center gap-1.5">
+                        <span>⭐</span>
+                        <span>National Showcase</span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug drop-shadow-md">
+                      🎉 Got Hired? Share Your Verified Placement Story!
+                    </h3>
+
+                    <div className="bg-black/50 border border-amber-500/40 rounded-2xl p-3.5 sm:p-4 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-auto">
+                      <p className="text-[11px] sm:text-xs text-amber-100/90 font-medium line-clamp-1">
+                        Super Admin requested your placement details to feature your verified success on our national Landing Page.
+                      </p>
+
+                      <button
+                        onClick={() => setIsGoldenReviewModalOpen(true)}
+                        className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-110 text-black font-black text-[11px] sm:text-xs uppercase tracking-wider py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.5)] transition-all active:scale-95 cursor-pointer whitespace-nowrap border border-amber-300 shrink-0 self-start sm:self-center hover:scale-[1.02]"
+                      >
+                        🏆 SUBMIT PLACEMENT DETAILS
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Slide: Golden Exam Card (Upgraded Candidates Only) ── */}
               {showGoldenExamCard && (
                 <div 
                   className={`w-full h-full min-h-[260px] sm:min-h-[220px] bg-gradient-to-br from-[#3b2a00] via-[#1a1400] to-black border-2 border-amber-400/60 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.35)] flex flex-col justify-between p-4 sm:p-5 hover:shadow-[0_0_65px_rgba(245,158,11,0.45)] text-left group transition-all duration-300 ease-in-out ${
-                    activeWidgetIndex === 0 
+                    widgetSlides[activeWidgetIndex] === 'exam'
                       ? 'relative z-10 opacity-100 translate-x-0 pointer-events-auto' 
                       : 'absolute inset-0 z-0 opacity-0 -translate-x-full pointer-events-none'
                   }`}
@@ -790,10 +872,10 @@ function StudentDashboard() {
                 </div>
               )}
 
-              {/* ── Slide 1 / Fallback: Recent Messages Card ── */}
+              {/* ── Slide: Recent Messages Card ── */}
               <div 
                 className={`w-full h-full min-h-[260px] sm:min-h-[220px] bg-gradient-to-br from-gray-800 to-black border border-gray-700/50 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.4),0_20px_50px_rgba(249,115,22,0.18)] flex flex-col justify-between p-4 sm:p-5 hover:shadow-[0_0_60px_rgba(0,0,0,0.5),0_20px_60px_rgba(249,115,22,0.28)] text-left transition-all duration-300 ease-in-out ${
-                  (!showGoldenExamCard || activeWidgetIndex === 1)
+                  widgetSlides[activeWidgetIndex] === 'messages'
                     ? 'relative z-10 opacity-100 translate-x-0 pointer-events-auto'
                     : 'absolute inset-0 z-0 opacity-0 translate-x-full pointer-events-none'
                 }`}
@@ -842,28 +924,26 @@ function StudentDashboard() {
             </div>
 
             {/* ── Samsung One UI Style Pagination Dots ── */}
-            {showGoldenExamCard && notifications.length > 0 && (
+            {widgetSlides.length > 1 && (
               <div className="flex items-center justify-center gap-2 mt-3 animate-fade-in">
-                <button
-                  type="button"
-                  onClick={() => setActiveWidgetIndex(0)}
-                  aria-label="Golden Exam Card"
-                  className={`transition-all duration-300 cursor-pointer ${
-                    activeWidgetIndex === 0 
-                      ? 'w-6 h-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.6)]' 
-                      : 'w-2 h-2 bg-gray-600/60 rounded-full hover:bg-gray-400'
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setActiveWidgetIndex(1)}
-                  aria-label="Recent Messages"
-                  className={`transition-all duration-300 cursor-pointer ${
-                    activeWidgetIndex === 1 
-                      ? 'w-6 h-2 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.6)]' 
-                      : 'w-2 h-2 bg-gray-600/60 rounded-full hover:bg-gray-400'
-                  }`}
-                />
+                {widgetSlides.map((slideKey, sIdx) => {
+                  const isGold = slideKey === 'exam' || slideKey === 'review';
+                  return (
+                    <button
+                      key={slideKey}
+                      type="button"
+                      onClick={() => setActiveWidgetIndex(sIdx)}
+                      aria-label={`Slide ${slideKey}`}
+                      className={`transition-all duration-300 cursor-pointer ${
+                        activeWidgetIndex === sIdx
+                          ? isGold
+                            ? 'w-6 h-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.6)]'
+                            : 'w-6 h-2 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.6)]'
+                          : 'w-2 h-2 bg-gray-600/60 rounded-full hover:bg-gray-400'
+                      }`}
+                    />
+                  );
+                })}
               </div>
             )}
 
@@ -1187,6 +1267,21 @@ function StudentDashboard() {
                 </button>
               )}
 
+              {((selectedNotifModal.type && selectedNotifModal.type.toLowerCase().includes('review')) ||
+                (selectedNotifModal.subject && selectedNotifModal.subject.toLowerCase().includes('review'))) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedNotifModal(null);
+                    setIsGoldenReviewModalOpen(true);
+                  }}
+                  className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-black font-black py-2.5 px-5 rounded-xl text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>🌟</span>
+                  <span>Submit Placement Details</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setSelectedNotifModal(null)}
@@ -1207,10 +1302,15 @@ function StudentDashboard() {
         studentName={studentName}
       />
 
-      {/* Student Review & Feedback Popup */}
-      <StudentReviewModal
+      {/* Golden Placement Review Modal (Mandatory, non-dismissible) */}
+      <GoldenReviewModal
+        isOpen={isGoldenReviewModalOpen}
         studentName={studentName}
         studentEmail={studentEmail}
+        onSuccess={() => {
+          setIsGoldenReviewModalOpen(false);
+          setHasReviewRequest(false);
+        }}
       />
       </div>
     </PullToRefreshWrapper>
