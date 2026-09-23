@@ -14,10 +14,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Push to Destination Repository
         run: |
           git config --global user.name "aniket-gupta020"
           git config --global user.email "dev@skillbridge.in"
+          git config --unset-all http.https://github.com/.extraheader || true
           git remote add destination "https://${{ secrets.RENDER_REPO_PAT }}@github.com/SkillGitServer/skill-bridge-repo.git"
           git push destination main --force
