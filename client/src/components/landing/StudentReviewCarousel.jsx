@@ -15,6 +15,57 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/api';
 
+// Smart helper to auto-detect and remove accidental black backgrounds on cutout photos
+const cleanCutoutImage = (src) => {
+  return new Promise((resolve) => {
+    if (!src || typeof src !== 'string' || !src.startsWith('data:image/')) {
+      return resolve(src);
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+
+        // Check the 4 corners: top-left, top-right, bottom-left, bottom-right
+        const corners = [
+          0,
+          (canvas.width - 1) * 4,
+          (canvas.height - 1) * canvas.width * 4,
+          ((canvas.height - 1) * canvas.width + (canvas.width - 1)) * 4
+        ];
+
+        const blackCorners = corners.filter(
+          (i) => d[i] < 35 && d[i + 1] < 35 && d[i + 2] < 35 && d[i + 3] > 200
+        ).length;
+
+        // If corners are black, remove the black background to reveal clean cutout
+        if (blackCorners >= 3) {
+          for (let i = 0; i < d.length; i += 4) {
+            if (d[i] < 35 && d[i + 1] < 35 && d[i + 2] < 35) {
+              d[i + 3] = 0; // Alpha = 0 (Transparent)
+            }
+          }
+          ctx.putImageData(imgData, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          resolve(src);
+        }
+      } catch {
+        resolve(src);
+      }
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+};
+
 export default function StudentReviewCarousel() {
   const [reviews, setReviews] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
@@ -34,8 +85,17 @@ export default function StudentReviewCarousel() {
         const url = `${API_BASE_URL ? API_BASE_URL : ''}/api/reviews/approved`;
         const res = await axios.get(url);
         if (isMounted && res.data && Array.isArray(res.data.reviews)) {
-          // Exactly up to 12 candidates, no repeats
-          setReviews(res.data.reviews.slice(0, 12));
+          // Clean black background if previously saved as JPEG
+          const processed = await Promise.all(
+            res.data.reviews.slice(0, 12).map(async (r) => {
+              if (r.photo) {
+                const cleaned = await cleanCutoutImage(r.photo);
+                return { ...r, photo: cleaned };
+              }
+              return r;
+            })
+          );
+          setReviews(processed);
         }
       } catch (err) {
         console.warn('Could not fetch placement reviews:', err.message);
@@ -57,7 +117,16 @@ export default function StudentReviewCarousel() {
         const url = `${API_BASE_URL ? API_BASE_URL : ''}/api/reviews/approved?all=true`;
         const res = await axios.get(url);
         if (res.data && Array.isArray(res.data.reviews)) {
-          setAllReviews(res.data.reviews);
+          const processed = await Promise.all(
+            res.data.reviews.map(async (r) => {
+              if (r.photo) {
+                const cleaned = await cleanCutoutImage(r.photo);
+                return { ...r, photo: cleaned };
+              }
+              return r;
+            })
+          );
+          setAllReviews(processed);
         }
       } catch (err) {
         console.warn('Failed to load all reviews:', err.message);
@@ -76,10 +145,8 @@ export default function StudentReviewCarousel() {
     const scrollSpeed = 0.7;
 
     const step = () => {
-      // Only scroll if content actually overflows the container and user is not clicking arrows
       if (!isManualInteracting && el.scrollWidth > el.clientWidth) {
         el.scrollLeft += scrollSpeed;
-        // Loop back when reaching the end
         if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
           el.scrollLeft = 0;
         }
@@ -96,7 +163,6 @@ export default function StudentReviewCarousel() {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Pause auto-scroll briefly so the manual jump completes smoothly
     setIsManualInteracting(true);
     if (manualTimeoutRef.current) clearTimeout(manualTimeoutRef.current);
     manualTimeoutRef.current = setTimeout(() => {
@@ -106,7 +172,7 @@ export default function StudentReviewCarousel() {
     const stepAmount = 340;
     const maxScroll = el.scrollWidth - el.clientWidth;
 
-    if (maxScroll <= 0) return; // cards fit on screen, nothing to scroll
+    if (maxScroll <= 0) return;
 
     if (direction === 'right') {
       if (el.scrollLeft >= maxScroll - 15) {
@@ -178,13 +244,13 @@ export default function StudentReviewCarousel() {
             Meet the ambitious candidates from Skill Bridge India who verified their skills and secured direct industry placements.
           </p>
 
-          {/* Navigation Controls & Show All Button */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
+          {/* Navigation Controls & Placed Candidates Button (Clean Single Row on Mobile) */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 pt-3 flex-nowrap max-w-full overflow-x-hidden">
             <button
               onClick={() => handleManualScroll('left')}
               aria-label="Previous story"
               disabled={displayItems.length <= 1}
-              className={`p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md ${
+              className={`p-2.5 sm:p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
                 displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
               }`}
             >
@@ -193,10 +259,10 @@ export default function StudentReviewCarousel() {
 
             <button
               onClick={handleOpenAllModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-105 text-black font-extrabold text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-amber-300"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-105 text-black font-extrabold text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-amber-300 shrink-0 whitespace-nowrap"
             >
               <Award size={15} />
-              <span>View All Placed Candidates</span>
+              <span>Placed Candidates</span>
               <ArrowRight size={14} />
             </button>
 
@@ -204,7 +270,7 @@ export default function StudentReviewCarousel() {
               onClick={() => handleManualScroll('right')}
               aria-label="Next story"
               disabled={displayItems.length <= 1}
-              className={`p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md ${
+              className={`p-2.5 sm:p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
                 displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
               }`}
             >

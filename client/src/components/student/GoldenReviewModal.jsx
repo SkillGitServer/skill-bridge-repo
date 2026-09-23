@@ -46,8 +46,10 @@ export default function GoldenReviewModal({
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.82));
+            // Export as PNG to preserve transparent background without turning black
+            resolve(canvas.toDataURL('image/png'));
           } catch {
             resolve(dataUrl);
           }
