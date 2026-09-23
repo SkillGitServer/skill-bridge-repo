@@ -11,7 +11,9 @@ import {
   Search,
   X,
   ArrowRight,
-  Award
+  Award,
+  Quote,
+  ShieldCheck
 } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/api';
 
@@ -69,15 +71,16 @@ const cleanCutoutImage = (src) => {
 export default function StudentReviewCarousel() {
   const [reviews, setReviews] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
-  const [isManualInteracting, setIsManualInteracting] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('next'); // 'next' | 'prev'
+  const [isAnimating, setIsAnimating] = useState(false);
   const [isAllModalOpen, setIsAllModalOpen] = useState(false);
   const [allSearchTerm, setAllSearchTerm] = useState('');
   const [isLoadingAll, setIsLoadingAll] = useState(false);
 
-  const scrollRef = useRef(null);
-  const manualTimeoutRef = useRef(null);
+  const autoRotateTimerRef = useRef(null);
 
-  // Fetch 12 most recent approved reviews for carousel
+  // Fetch up to 12 approved reviews, randomly shuffled
   useEffect(() => {
     let isMounted = true;
     const fetchApprovedReviews = async () => {
@@ -85,9 +88,10 @@ export default function StudentReviewCarousel() {
         const url = `${API_BASE_URL ? API_BASE_URL : ''}/api/reviews/approved`;
         const res = await axios.get(url);
         if (isMounted && res.data && Array.isArray(res.data.reviews)) {
-          // Clean black background if previously saved as JPEG
+          // Shuffle randomly and take up to 12
+          const list = [...res.data.reviews].sort(() => 0.5 - Math.random()).slice(0, 12);
           const processed = await Promise.all(
-            res.data.reviews.slice(0, 12).map(async (r) => {
+            list.map(async (r) => {
               if (r.photo) {
                 const cleaned = await cleanCutoutImage(r.photo);
                 return { ...r, photo: cleaned };
@@ -136,58 +140,43 @@ export default function StudentReviewCarousel() {
     }
   };
 
-  // Continuous smooth auto-scroll loop (does NOT pause on mouse hover)
+  // Auto-carousel playback cycling up to 12 reviews
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || reviews.length <= 1) return;
+    if (reviews.length <= 1) return;
 
-    let animationFrameId;
-    const scrollSpeed = 0.7;
-
-    const step = () => {
-      if (!isManualInteracting && el.scrollWidth > el.clientWidth) {
-        el.scrollLeft += scrollSpeed;
-        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
-          el.scrollLeft = 0;
-        }
-      }
-      animationFrameId = requestAnimationFrame(step);
+    const startTimer = () => {
+      if (autoRotateTimerRef.current) clearInterval(autoRotateTimerRef.current);
+      autoRotateTimerRef.current = setInterval(() => {
+        setSlideDirection('next');
+        setIsAnimating(true);
+        setCurrentIndex((prev) => (prev + 1) % reviews.length);
+        setTimeout(() => setIsAnimating(false), 500);
+      }, 5500);
     };
 
-    animationFrameId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isManualInteracting, reviews.length]);
+    startTimer();
+    return () => {
+      if (autoRotateTimerRef.current) clearInterval(autoRotateTimerRef.current);
+    };
+  }, [reviews.length]);
 
-  // Working manual scroll buttons (< and >) with smooth looping
-  const handleManualScroll = (direction) => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    setIsManualInteracting(true);
-    if (manualTimeoutRef.current) clearTimeout(manualTimeoutRef.current);
-    manualTimeoutRef.current = setTimeout(() => {
-      setIsManualInteracting(false);
-    }, 2500);
-
-    const stepAmount = 340;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-
-    if (maxScroll <= 0) return;
-
-    if (direction === 'right') {
-      if (el.scrollLeft >= maxScroll - 15) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: stepAmount, behavior: 'smooth' });
-      }
-    } else {
-      if (el.scrollLeft <= 15) {
-        el.scrollTo({ left: maxScroll, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: -stepAmount, behavior: 'smooth' });
-      }
-    }
+  const handleNext = () => {
+    if (reviews.length <= 1) return;
+    setSlideDirection('next');
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev + 1) % reviews.length);
+    setTimeout(() => setIsAnimating(false), 500);
   };
+
+  const handlePrev = () => {
+    if (reviews.length <= 1) return;
+    setSlideDirection('prev');
+    setIsAnimating(true);
+    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
+    setTimeout(() => setIsAnimating(false), 500);
+  };
+
+  const activeCandidate = reviews[currentIndex] || null;
 
   const getInitials = (name) => {
     if (!name) return 'C';
@@ -199,20 +188,7 @@ export default function StudentReviewCarousel() {
       .toUpperCase();
   };
 
-  const getCardAccent = (idx) => {
-    const accents = [
-      { border: 'border-amber-300/60', glow: 'from-amber-400/25 to-yellow-400/5' },
-      { border: 'border-indigo-300/60', glow: 'from-indigo-400/25 to-blue-400/5' },
-      { border: 'border-teal-300/60', glow: 'from-teal-400/25 to-emerald-400/5' },
-      { border: 'border-rose-300/60', glow: 'from-rose-400/25 to-orange-400/5' }
-    ];
-    return accents[idx % accents.length];
-  };
-
-  // Strictly 1 card per candidate, up to 12 candidates, NO repeats
-  const displayItems = reviews.slice(0, 12);
-
-  // Filtered all-candidates list for modal
+  // Filtered list for the Placed Candidates modal
   const filteredAll = (allReviews.length > 0 ? allReviews : reviews).filter((item) => {
     if (!allSearchTerm.trim()) return true;
     const term = allSearchTerm.toLowerCase();
@@ -228,9 +204,93 @@ export default function StudentReviewCarousel() {
       id="candidate-reviews"
       className="relative py-20 px-4 md:px-6 overflow-hidden bg-transparent select-none"
     >
-      <div className="relative z-10 max-w-7xl mx-auto">
+      {/* Scoped CSS animations for floating avatar and sequential staggered text reveal */}
+      <style>{`
+        @keyframes avatarFloat {
+          0%, 100% {
+            transform: translateY(0px) scale(1);
+          }
+          50% {
+            transform: translateY(-8px) scale(1.02);
+          }
+        }
+        @keyframes haloPulse {
+          0%, 100% {
+            opacity: 0.55;
+            transform: scale(0.96);
+          }
+          50% {
+            opacity: 0.85;
+            transform: scale(1.08);
+          }
+        }
+        @keyframes staggerRevealLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-28px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInFromRight {
+          from {
+            opacity: 0;
+            transform: translateX(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .anim-float-avatar {
+          animation: avatarFloat 4.8s ease-in-out infinite;
+        }
+        .anim-halo-pulse {
+          animation: haloPulse 4s ease-in-out infinite;
+        }
+        .anim-slide-next {
+          animation: slideInFromRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .anim-slide-prev {
+          animation: slideInFromLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .stagger-step-1 {
+          animation: staggerRevealLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: 0.04s;
+        }
+        .stagger-step-2 {
+          animation: staggerRevealLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: 0.12s;
+        }
+        .stagger-step-3 {
+          animation: staggerRevealLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: 0.20s;
+        }
+        .stagger-step-4 {
+          animation: staggerRevealLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: 0.28s;
+        }
+        .stagger-step-5 {
+          animation: staggerRevealLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation-delay: 0.36s;
+        }
+      `}</style>
+
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-10 space-y-3">
+        <div className="text-center mb-8 space-y-3">
           <span className="inline-flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xs">
             <Sparkles size={13} className="text-amber-400" />
             <span>Placement Success</span>
@@ -245,13 +305,13 @@ export default function StudentReviewCarousel() {
           </p>
 
           {/* Navigation Controls & Placed Candidates Button (Clean Single Row on Mobile) */}
-          <div className="flex items-center justify-center gap-2 sm:gap-3 pt-3 flex-nowrap max-w-full overflow-x-hidden">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 pt-2 flex-nowrap max-w-full overflow-x-hidden">
             <button
-              onClick={() => handleManualScroll('left')}
-              aria-label="Previous story"
-              disabled={displayItems.length <= 1}
-              className={`p-2.5 sm:p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
-                displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+              onClick={handlePrev}
+              aria-label="Previous candidate"
+              disabled={reviews.length <= 1}
+              className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
+                reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
               }`}
             >
               <ChevronLeft size={18} />
@@ -259,7 +319,7 @@ export default function StudentReviewCarousel() {
 
             <button
               onClick={handleOpenAllModal}
-              className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-105 text-black font-extrabold text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-amber-300 shrink-0 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-105 text-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-amber-300 shrink-0 whitespace-nowrap"
             >
               <Award size={15} />
               <span>Placed Candidates</span>
@@ -267,11 +327,11 @@ export default function StudentReviewCarousel() {
             </button>
 
             <button
-              onClick={() => handleManualScroll('right')}
-              aria-label="Next story"
-              disabled={displayItems.length <= 1}
-              className={`p-2.5 sm:p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
-                displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+              onClick={handleNext}
+              aria-label="Next candidate"
+              disabled={reviews.length <= 1}
+              className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
+                reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
               }`}
             >
               <ChevronRight size={18} />
@@ -279,116 +339,157 @@ export default function StudentReviewCarousel() {
           </div>
         </div>
 
-        {/* Carousel Container — No mouse hover pause, no white bars, pure seamless backdrop */}
-        {displayItems.length > 0 ? (
-          <div className="relative w-full overflow-visible py-4">
-            {/* Scrolling Track: Centered when 1-2 items, scrollable when overflow */}
+        {/* ── Large-Format Card Layout ── */}
+        {activeCandidate ? (
+          <div className="w-full max-w-4xl mx-auto px-2">
             <div
-              ref={scrollRef}
-              className={`flex gap-6 overflow-x-auto overflow-y-visible py-6 px-4 scroll-smooth no-scrollbar ${
-                displayItems.length <= 2 ? 'justify-center' : 'justify-start'
+              key={activeCandidate._id || currentIndex}
+              className={`relative bg-white/55 hover:bg-white/65 backdrop-blur-3xl border border-white/80 rounded-[36px] p-6 sm:p-10 md:p-12 shadow-[0_25px_60px_rgba(0,0,0,0.06),0_1px_3px_rgba(255,255,255,0.9)_inset] transition-all duration-300 overflow-hidden ${
+                slideDirection === 'next' ? 'anim-slide-next' : 'anim-slide-prev'
               }`}
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {displayItems.map((item, idx) => {
-                const accent = getCardAccent(idx);
+              {/* Subtle ambient luxury background tint */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-400/15 via-orange-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-indigo-500/10 via-purple-400/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-                return (
-                  <div
-                    key={item._id || idx}
-                    className={`group relative flex-shrink-0 w-[290px] sm:w-[320px] bg-white/40 hover:bg-white/60 backdrop-blur-2xl border ${accent.border} rounded-3xl p-5 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-2.5 transition-all duration-300 flex flex-col justify-between text-left`}
-                  >
-                    {/* Ambient Glow behind Cutout */}
-                    <div
-                      className={`absolute top-4 left-1/2 -translate-x-1/2 w-28 h-28 bg-gradient-to-tr ${accent.glow} rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500`}
-                    />
+              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12">
+                {/* ── Left Column: Transparent Cutout Avatar with Glowing Halo ── */}
+                <div className="relative flex flex-col items-center shrink-0 w-full sm:w-auto">
+                  {/* Glowing Ambient Pedestal behind Cutout */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-56 sm:h-56 bg-gradient-to-tr from-amber-400/35 via-orange-400/25 to-yellow-300/15 rounded-full blur-2xl anim-halo-pulse pointer-events-none" />
 
-                    <div>
-                      {/* Top Header: Cutout Silhouette Portrait + Placed Badge */}
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        {/* Background-less Cutout Portrait with 3D drop-shadow */}
-                        <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
-                          {item.photo ? (
-                            <img
-                              src={item.photo}
-                              alt={item.name}
-                              className="w-full h-full object-contain filter drop-shadow-[0_12px_16px_rgba(0,0,0,0.25)] transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2 pointer-events-none select-none"
-                            />
-                          ) : (
-                            <div className="w-18 h-18 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-xl font-black shadow-md border-2 border-amber-300">
-                              {getInitials(item.name)}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-300/60 text-[10px] font-black shrink-0 shadow-xs">
-                          <CheckCircle2 size={12} className="text-emerald-600" />
-                          <span>Placed</span>
-                        </div>
+                  {/* Cutout Silhouette Portrait (No bounding box, no harsh cropping) */}
+                  <div className="relative w-44 h-48 sm:w-56 sm:h-64 flex items-center justify-center anim-float-avatar">
+                    {activeCandidate.photo ? (
+                      <img
+                        src={activeCandidate.photo}
+                        alt={activeCandidate.name}
+                        className="w-full h-full object-contain filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.22)] pointer-events-none select-none"
+                      />
+                    ) : (
+                      <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 text-black flex items-center justify-center text-3xl sm:text-4xl font-black shadow-xl border-2 border-amber-300">
+                        {getInitials(activeCandidate.name)}
                       </div>
+                    )}
+                  </div>
 
-                      {/* Candidate Name */}
-                      <h3 className="font-extrabold text-gray-900 text-lg leading-tight group-hover:text-amber-900 transition-colors">
-                        {item.name || 'Verified Candidate'}
-                      </h3>
+                  {/* Floating Placed Badge below silhouette */}
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-300/70 text-xs font-black shadow-xs backdrop-blur-md">
+                    <CheckCircle2 size={13} className="text-emerald-600" />
+                    <span>Verified Placed Candidate</span>
+                  </div>
+                </div>
+
+                {/* ── Right Column: Sequential Staggered Text Reveal ── */}
+                <div className="flex-1 flex flex-col justify-center text-left w-full space-y-4">
+                  {/* Stagger 1: Category Tag */}
+                  <div className="stagger-step-1 flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-300/60 text-[11px] font-black uppercase tracking-wider">
+                      <Sparkles size={12} className="text-amber-600" />
+                      <span>Direct Corporate Hire</span>
+                    </span>
+                    <span className="text-xs text-gray-400 font-bold">•</span>
+                    <span className="text-xs text-gray-500 font-bold">Skill Bridge India Alumni</span>
+                  </div>
+
+                  {/* Stagger 2: Candidate Name */}
+                  <div className="stagger-step-2">
+                    <h3 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                      {activeCandidate.name || 'Verified Candidate'}
+                    </h3>
+                  </div>
+
+                  {/* Stagger 3: Testimonial Quote / Milestone Highlight */}
+                  <div className="stagger-step-3 bg-white/70 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs relative">
+                    <Quote size={20} className="text-amber-500/40 absolute top-3 right-3" />
+                    <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed pr-6">
+                      {activeCandidate.reviewText ||
+                        `Successfully qualified the platform verification exam and transitioned directly into an industry role at ${activeCandidate.company || 'our corporate partner'}.`}
+                    </p>
+                  </div>
+
+                  {/* Stagger 4: Placement Details (Company, Role, Joining Date) */}
+                  <div className="stagger-step-4 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                    {/* Company */}
+                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-900 flex items-center justify-center shrink-0">
+                        <Building size={16} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
+                          Company
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-gray-900 truncate block mt-0.5">
+                          {activeCandidate.company || 'Corporate Partner'}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Placement Details Card */}
-                    <div className="mt-4 pt-3 border-t border-gray-200/50 space-y-2.5">
-                      {/* Company (Where they got the job) */}
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-amber-500/15 text-amber-900 flex items-center justify-center shrink-0">
-                          <Building size={14} />
-                        </div>
-                        <div className="overflow-hidden">
-                          <span className="text-[9px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                            Company
-                          </span>
-                          <span className="text-xs font-black text-gray-900 truncate block mt-0.5">
-                            {item.company || 'Corporate Partner'}
-                          </span>
-                        </div>
+                    {/* Role */}
+                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-900 flex items-center justify-center shrink-0">
+                        <Briefcase size={16} />
                       </div>
-
-                      {/* Role in the job */}
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-indigo-500/15 text-indigo-900 flex items-center justify-center shrink-0">
-                          <Briefcase size={14} />
-                        </div>
-                        <div className="overflow-hidden">
-                          <span className="text-[9px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                            Role
-                          </span>
-                          <span className="text-xs font-bold text-gray-800 truncate block mt-0.5">
-                            {item.role || 'Professional Role'}
-                          </span>
-                        </div>
+                      <div className="overflow-hidden">
+                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
+                          Role
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-gray-800 truncate block mt-0.5">
+                          {activeCandidate.role || 'Professional Role'}
+                        </span>
                       </div>
+                    </div>
 
-                      {/* Date joined */}
-                      {item.joiningDate && (
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-xl bg-teal-500/15 text-teal-900 flex items-center justify-center shrink-0">
-                            <Calendar size={14} />
-                          </div>
-                          <div className="overflow-hidden">
-                            <span className="text-[9px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                              Joined Date
-                            </span>
-                            <span className="text-[11px] font-bold text-gray-700 truncate block mt-0.5">
-                              {item.joiningDate}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                    {/* Date Joined */}
+                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-teal-500/15 text-teal-900 flex items-center justify-center shrink-0">
+                        <Calendar size={16} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
+                          Joined Date
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-gray-700 truncate block mt-0.5">
+                          {activeCandidate.joiningDate || 'Recently Placed'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Stagger 5: Super Admin Verification Seal */}
+                  <div className="stagger-step-5 pt-2 flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
+                    <span className="text-[11px] font-bold text-gray-500">
+                      Verified credentials archived on Skill Bridge India National Placement Network
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Pagination Dots (if multiple reviews) */}
+              {reviews.length > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-gray-200/40">
+                  {reviews.map((r, idx) => (
+                    <button
+                      key={r._id || idx}
+                      onClick={() => {
+                        setSlideDirection(idx > currentIndex ? 'next' : 'prev');
+                        setCurrentIndex(idx);
+                      }}
+                      aria-label={`Candidate ${idx + 1}`}
+                      className={`transition-all duration-300 cursor-pointer ${
+                        currentIndex === idx
+                          ? 'w-8 h-2 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                          : 'w-2 h-2 bg-gray-300 rounded-full hover:bg-gray-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 px-4 bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 max-w-md mx-auto">
+          <div className="text-center py-16 px-4 bg-white/40 backdrop-blur-md rounded-3xl border border-white/60 max-w-md mx-auto">
             <Sparkles size={28} className="text-amber-500 mx-auto mb-2 animate-bounce" />
             <h4 className="text-base font-extrabold text-gray-800">Placement Stories Updating</h4>
             <p className="text-xs text-gray-500 mt-1">
@@ -410,7 +511,7 @@ export default function StudentReviewCarousel() {
                   <span>National Placement Hall of Fame</span>
                 </span>
                 <h3 className="text-xl md:text-2xl font-black text-gray-900 mt-1">
-                  All Placed Candidates ({filteredAll.length})
+                  Placed Candidates ({filteredAll.length})
                 </h3>
               </div>
 
@@ -446,69 +547,65 @@ export default function StudentReviewCarousel() {
                 </div>
               ) : filteredAll.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredAll.map((item, idx) => {
-                    const accent = getCardAccent(idx);
-
-                    return (
-                      <div
-                        key={item._id || idx}
-                        className={`group relative bg-white/70 hover:bg-white backdrop-blur-xl border ${accent.border} rounded-2xl p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left`}
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            {/* Cutout silhouette */}
-                            <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
-                              {item.photo ? (
-                                <img
-                                  src={item.photo}
-                                  alt={item.name}
-                                  className="w-full h-full object-contain filter drop-shadow-[0_10px_14px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform select-none"
-                                />
-                              ) : (
-                                <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-lg font-black shadow-sm">
-                                  {getInitials(item.name)}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0">
-                              <CheckCircle2 size={11} className="text-emerald-600" />
-                              <span>Placed</span>
-                            </div>
+                  {filteredAll.map((item, idx) => (
+                    <div
+                      key={item._id || idx}
+                      className="group relative bg-white/70 hover:bg-white backdrop-blur-xl border border-gray-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between text-left"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          {/* Cutout silhouette */}
+                          <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
+                            {item.photo ? (
+                              <img
+                                src={item.photo}
+                                alt={item.name}
+                                className="w-full h-full object-contain filter drop-shadow-[0_10px_14px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform select-none"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-500 text-black flex items-center justify-center text-lg font-black shadow-sm">
+                                {getInitials(item.name)}
+                              </div>
+                            )}
                           </div>
 
-                          <h4 className="font-extrabold text-gray-900 text-base leading-tight mt-1">
-                            {item.name || 'Verified Candidate'}
-                          </h4>
+                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0">
+                            <CheckCircle2 size={11} className="text-emerald-600" />
+                            <span>Placed</span>
+                          </div>
                         </div>
 
-                        <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Building size={13} className="text-amber-600 shrink-0" />
-                            <span className="text-xs font-bold text-gray-900 truncate">
-                              {item.company || 'Corporate Partner'}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Briefcase size={13} className="text-indigo-600 shrink-0" />
-                            <span className="text-xs font-semibold text-gray-700 truncate">
-                              {item.role || 'Role'}
-                            </span>
-                          </div>
-
-                          {item.joiningDate && (
-                            <div className="flex items-center gap-2">
-                              <Calendar size={13} className="text-teal-600 shrink-0" />
-                              <span className="text-[11px] font-medium text-gray-500 truncate">
-                                {item.joiningDate}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        <h4 className="font-extrabold text-gray-900 text-base leading-tight mt-1">
+                          {item.name || 'Verified Candidate'}
+                        </h4>
                       </div>
-                    );
-                  })}
+
+                      <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Building size={13} className="text-amber-600 shrink-0" />
+                          <span className="text-xs font-bold text-gray-900 truncate">
+                            {item.company || 'Corporate Partner'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Briefcase size={13} className="text-indigo-600 shrink-0" />
+                          <span className="text-xs font-semibold text-gray-700 truncate">
+                            {item.role || 'Role'}
+                          </span>
+                        </div>
+
+                        {item.joiningDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar size={13} className="text-teal-600 shrink-0" />
+                            <span className="text-[11px] font-medium text-gray-500 truncate">
+                              {item.joiningDate}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="py-16 text-center text-gray-400">
