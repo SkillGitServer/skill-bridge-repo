@@ -17,6 +17,7 @@ export default function GoldenReviewModal({
   const [joiningDate, setJoiningDate] = useState('');
   const [photo, setPhoto] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     if (!name) {
@@ -25,7 +26,41 @@ export default function GoldenReviewModal({
     }
   }, [name]);
 
-  const handlePhotoUpload = (e) => {
+  const compressDataUrl = async (dataUrl) => {
+    return new Promise((resolve) => {
+      try {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width || 500;
+            let height = img.height || 500;
+            const maxDim = 500;
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } catch {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      } catch {
+        resolve(dataUrl);
+      }
+    });
+  };
+
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -34,14 +69,11 @@ export default function GoldenReviewModal({
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be under 2MB.');
-      return;
-    }
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setPhoto(event.target.result);
+    reader.onload = async (event) => {
+      const rawUrl = event.target.result;
+      const compressed = await compressDataUrl(rawUrl);
+      setPhoto(compressed);
     };
     reader.readAsDataURL(file);
   };
@@ -64,15 +96,20 @@ export default function GoldenReviewModal({
     setIsSubmitting(true);
     try {
       const token = getAuthToken('spark');
-      const url = `${API_BASE_URL ? API_BASE_URL : ''}/api/reviews`;
+      const url = '/api/reviews';
+
+      let photoToSend = photo;
+      if (photo && photo.length > 100000 && photo.startsWith('data:image/')) {
+        photoToSend = await compressDataUrl(photo);
+      }
 
       const payload = {
         name: name.trim(),
-        email: studentEmail || localStorage.getItem('auth_email') || '',
+        email: studentEmail || localStorage.getItem('auth_email') || localStorage.getItem('student_email') || '',
         company: company.trim(),
         role: role.trim(),
         joiningDate: joiningDate.trim(),
-        photo: photo || ''
+        photo: photoToSend || ''
       };
 
       const res = await axios.post(url, payload, {
@@ -82,19 +119,20 @@ export default function GoldenReviewModal({
       if (res.data?.success) {
         toast.success('Congratulations! Your placement review is submitted and featured on the national showcase.');
         localStorage.setItem('sbi_placement_review_submitted', 'true');
+        setIsDismissed(true);
         if (onSuccess) onSuccess();
       } else {
         throw new Error(res.data?.error || 'Submission failed');
       }
     } catch (err) {
       console.error('Failed to submit placement review:', err);
-      toast.error(err.response?.data?.error || 'Failed to submit review. Please try again.');
+      toast.error(err.response?.data?.error || err.message || 'Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || isDismissed) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in select-none">

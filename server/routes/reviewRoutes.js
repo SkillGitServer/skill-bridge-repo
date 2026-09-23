@@ -236,17 +236,25 @@ router.post('/api/reviews', async (req, res) => {
       await review.save();
     }
 
-    // Clear request flag & mark notification as read on student
+    // Safely clear request flag & mark notification as read on student
     if (studentId || studentEmail) {
-      const query = studentId ? { _id: studentId } : { email: studentEmail };
-      await Student.updateOne(query, {
-        $set: {
-          reviewRequested: false,
-          'notifications.$[elem].unread': false
+      try {
+        const query = studentId ? { _id: studentId } : { email: studentEmail };
+        const studentDoc = await Student.findOne(query);
+        if (studentDoc) {
+          studentDoc.reviewRequested = false;
+          if (Array.isArray(studentDoc.notifications)) {
+            studentDoc.notifications.forEach(n => {
+              if (n && (n.type === 'SuperAdmin Review Request' || n.subject === 'Placement Review Request')) {
+                n.unread = false;
+              }
+            });
+          }
+          await studentDoc.save();
         }
-      }, {
-        arrayFilters: [{ 'elem.type': 'SuperAdmin Review Request' }]
-      });
+      } catch (cleanupErr) {
+        console.warn('Non-fatal: could not clear student review requested flag:', cleanupErr.message);
+      }
     }
 
     res.status(201).json({

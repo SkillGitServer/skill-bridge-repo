@@ -1310,6 +1310,10 @@ function StudentDashboard() {
         onSuccess={() => {
           setIsGoldenReviewModalOpen(false);
           setHasReviewRequest(false);
+          setNotifications((prev) =>
+            prev.filter((n) => n.type !== 'SuperAdmin Review Request' && !n.subject?.toLowerCase().includes('review'))
+          );
+          localStorage.setItem('sbi_placement_review_submitted', 'true');
         }}
       />
       </div>

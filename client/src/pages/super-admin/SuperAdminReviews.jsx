@@ -126,7 +126,41 @@ export default function SuperAdminReviews() {
     });
   };
 
-  // Handle Photo Upload in Edit Modal (Converts to clean Base64)
+  const compressDataUrl = async (dataUrl) => {
+    return new Promise((resolve) => {
+      try {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width || 500;
+            let height = img.height || 500;
+            const maxDim = 500;
+            if (width > height && width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } catch {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      } catch {
+        resolve(dataUrl);
+      }
+    });
+  };
+
+  // Handle Photo Upload in Edit Modal (Converts to clean compressed Base64)
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -136,14 +170,11 @@ export default function SuperAdminReviews() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be under 2MB.');
-      return;
-    }
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      setEditForm((prev) => ({ ...prev, photo: event.target.result }));
+    reader.onload = async (event) => {
+      const rawUrl = event.target.result;
+      const compressed = await compressDataUrl(rawUrl);
+      setEditForm((prev) => ({ ...prev, photo: compressed }));
     };
     reader.readAsDataURL(file);
   };
