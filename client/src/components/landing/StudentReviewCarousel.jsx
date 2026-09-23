@@ -399,65 +399,58 @@ export default function StudentReviewCarousel() {
                     </h3>
                   </div>
 
-                  {/* Stagger 3: Testimonial Quote / Milestone Highlight */}
-                  <div className="stagger-step-3 bg-white/70 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs relative">
-                    <Quote size={20} className="text-amber-500/40 absolute top-3 right-3" />
-                    <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed pr-6">
-                      {activeCandidate.reviewText ||
-                        `Successfully qualified the platform verification exam and transitioned directly into an industry role at ${activeCandidate.company || 'our corporate partner'}.`}
-                    </p>
-                  </div>
-
-                  {/* Stagger 4: Placement Details (Company, Role, Joining Date) */}
-                  <div className="stagger-step-4 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  {/* Stagger 3: Vertically Stacked Candidate Placement Details */}
+                  <div className="stagger-step-3 space-y-3 pt-1">
                     {/* Company */}
-                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-900 flex items-center justify-center shrink-0">
-                        <Building size={16} />
+                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-400/10 text-amber-900 border border-amber-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Building size={20} className="text-amber-700" />
                       </div>
-                      <div className="overflow-hidden">
-                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                          Company
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                          Company / Organization
                         </span>
-                        <span className="text-xs sm:text-sm font-black text-gray-900 truncate block mt-0.5">
+                        <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
                           {activeCandidate.company || 'Corporate Partner'}
-                        </span>
+                        </h4>
                       </div>
                     </div>
 
                     {/* Role */}
-                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-900 flex items-center justify-center shrink-0">
-                        <Briefcase size={16} />
+                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-500/10 text-indigo-900 border border-indigo-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Briefcase size={20} className="text-indigo-700" />
                       </div>
-                      <div className="overflow-hidden">
-                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                          Role
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                          Job Role / Designation
                         </span>
-                        <span className="text-xs sm:text-sm font-bold text-gray-800 truncate block mt-0.5">
+                        <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
                           {activeCandidate.role || 'Professional Role'}
-                        </span>
+                        </h4>
                       </div>
                     </div>
 
-                    {/* Date Joined */}
-                    <div className="bg-white/60 backdrop-blur-md rounded-2xl p-3.5 border border-white/80 shadow-2xs flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-teal-500/15 text-teal-900 flex items-center justify-center shrink-0">
-                        <Calendar size={16} />
+                    {/* Joined Date */}
+                    {activeCandidate.joiningDate && (
+                      <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/10 text-teal-900 border border-teal-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                          <Calendar size={20} className="text-teal-700" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                            Joining Date
+                          </span>
+                          <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
+                            {activeCandidate.joiningDate}
+                          </h4>
+                        </div>
                       </div>
-                      <div className="overflow-hidden">
-                        <span className="text-[10px] font-black text-gray-400 block uppercase tracking-wider leading-none">
-                          Joined Date
-                        </span>
-                        <span className="text-xs sm:text-sm font-bold text-gray-700 truncate block mt-0.5">
-                          {activeCandidate.joiningDate || 'Recently Placed'}
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
-                  {/* Stagger 5: Super Admin Verification Seal */}
-                  <div className="stagger-step-5 pt-2 flex items-center gap-2">
+                  {/* Stagger 4: Super Admin Verification Seal */}
+                  <div className="stagger-step-4 pt-1 flex items-center gap-2">
                     <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
                     <span className="text-[11px] font-bold text-gray-500">
                       Verified credentials archived on Skill Bridge India National Placement Network
