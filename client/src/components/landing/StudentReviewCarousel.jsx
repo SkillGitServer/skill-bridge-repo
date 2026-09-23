@@ -352,80 +352,80 @@ export default function StudentReviewCarousel() {
               <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-amber-400/15 via-orange-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-indigo-500/10 via-purple-400/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12">
-                {/* ── Left Column: Transparent Cutout Avatar with Glowing Halo ── */}
-                <div className="relative flex flex-col items-center shrink-0 w-full sm:w-auto">
+              <div className="relative z-10 flex flex-col md:flex-row items-center md:items-center gap-6 sm:gap-8 md:gap-10">
+                {/* ── Left Column: Larger Transparent Cutout Avatar with Glowing Halo ── */}
+                <div className="relative flex flex-col items-center shrink-0 w-full md:w-5/12">
                   {/* Glowing Ambient Pedestal behind Cutout */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-56 sm:h-56 bg-gradient-to-tr from-amber-400/35 via-orange-400/25 to-yellow-300/15 rounded-full blur-2xl anim-halo-pulse pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 bg-gradient-to-tr from-amber-400/35 via-orange-400/25 to-yellow-300/15 rounded-full blur-3xl anim-halo-pulse pointer-events-none" />
 
-                  {/* Cutout Silhouette Portrait (No bounding box, no harsh cropping) */}
-                  <div className="relative w-44 h-48 sm:w-56 sm:h-64 flex items-center justify-center anim-float-avatar">
+                  {/* Cutout Silhouette Portrait — Heroic & High-Impact Size */}
+                  <div className="relative w-56 h-64 sm:w-72 sm:h-80 md:w-80 md:h-92 flex items-center justify-center anim-float-avatar">
                     {activeCandidate.photo ? (
                       <img
                         src={activeCandidate.photo}
                         alt={activeCandidate.name}
-                        className="w-full h-full object-contain filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.22)] pointer-events-none select-none"
+                        className="w-full h-full object-contain filter drop-shadow-[0_22px_28px_rgba(0,0,0,0.22)] pointer-events-none select-none"
                       />
                     ) : (
-                      <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 text-black flex items-center justify-center text-3xl sm:text-4xl font-black shadow-xl border-2 border-amber-300">
+                      <div className="w-32 h-32 sm:w-44 sm:h-44 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 text-black flex items-center justify-center text-4xl sm:text-5xl font-black shadow-xl border-2 border-amber-300">
                         {getInitials(activeCandidate.name)}
                       </div>
                     )}
                   </div>
 
                   {/* Floating Placed Badge below silhouette */}
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-300/70 text-xs font-black shadow-xs backdrop-blur-md">
-                    <CheckCircle2 size={13} className="text-emerald-600" />
+                  <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/15 text-emerald-800 border border-emerald-300/70 text-[10px] sm:text-[11px] font-black shadow-xs backdrop-blur-md">
+                    <CheckCircle2 size={12} className="text-emerald-600" />
                     <span>Verified Placed Candidate</span>
                   </div>
                 </div>
 
-                {/* ── Right Column: Sequential Staggered Text Reveal ── */}
-                <div className="flex-1 flex flex-col justify-center text-left w-full space-y-4">
+                {/* ── Right Column: Sleek, Well-Proportioned Typography & Stack ── */}
+                <div className="flex-1 flex flex-col justify-center text-left w-full space-y-3">
                   {/* Stagger 1: Category Tag */}
                   <div className="stagger-step-1 flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-900 border border-amber-300/60 text-[11px] font-black uppercase tracking-wider">
-                      <Sparkles size={12} className="text-amber-600" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 border border-amber-300/60 text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
+                      <Sparkles size={11} className="text-amber-600" />
                       <span>Direct Corporate Hire</span>
                     </span>
-                    <span className="text-xs text-gray-400 font-bold">•</span>
-                    <span className="text-xs text-gray-500 font-bold">Skill Bridge India Alumni</span>
+                    <span className="text-[10px] text-gray-400 font-bold">•</span>
+                    <span className="text-[10px] text-gray-500 font-bold">Skill Bridge India Alumni</span>
                   </div>
 
-                  {/* Stagger 2: Candidate Name */}
+                  {/* Stagger 2: Candidate Name (Refined, Modern Size) */}
                   <div className="stagger-step-2">
-                    <h3 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-tight">
                       {activeCandidate.name || 'Verified Candidate'}
                     </h3>
                   </div>
 
-                  {/* Stagger 3: Vertically Stacked Candidate Placement Details */}
-                  <div className="stagger-step-3 space-y-3 pt-1">
+                  {/* Stagger 3: Vertically Stacked Placement Details (Compact & Sleek) */}
+                  <div className="stagger-step-3 space-y-2 sm:space-y-2.5 pt-0.5">
                     {/* Company */}
-                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-400/10 text-amber-900 border border-amber-300/40 flex items-center justify-center shrink-0 shadow-2xs">
-                        <Building size={20} className="text-amber-700" />
+                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-400/10 text-amber-900 border border-amber-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Building size={16} className="text-amber-700" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                        <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block leading-none">
                           Company / Organization
                         </span>
-                        <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
+                        <h4 className="text-xs sm:text-sm md:text-base font-extrabold text-gray-900 truncate mt-0.5">
                           {activeCandidate.company || 'Corporate Partner'}
                         </h4>
                       </div>
                     </div>
 
                     {/* Role */}
-                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-500/10 text-indigo-900 border border-indigo-300/40 flex items-center justify-center shrink-0 shadow-2xs">
-                        <Briefcase size={20} className="text-indigo-700" />
+                    <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/10 text-indigo-900 border border-indigo-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Briefcase size={16} className="text-indigo-700" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                        <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block leading-none">
                           Job Role / Designation
                         </span>
-                        <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
+                        <h4 className="text-xs sm:text-sm md:text-base font-extrabold text-gray-900 truncate mt-0.5">
                           {activeCandidate.role || 'Professional Role'}
                         </h4>
                       </div>
@@ -433,15 +433,15 @@ export default function StudentReviewCarousel() {
 
                     {/* Joined Date */}
                     {activeCandidate.joiningDate && (
-                      <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/80 shadow-xs flex items-center gap-4 transition-all">
-                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/10 text-teal-900 border border-teal-300/40 flex items-center justify-center shrink-0 shadow-2xs">
-                          <Calendar size={20} className="text-teal-700" />
+                      <div className="bg-white/60 hover:bg-white/80 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/80 shadow-2xs flex items-center gap-3 transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/10 text-teal-900 border border-teal-300/40 flex items-center justify-center shrink-0 shadow-2xs">
+                          <Calendar size={16} className="text-teal-700" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block leading-none">
+                          <span className="text-[8px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest block leading-none">
                             Joining Date
                           </span>
-                          <h4 className="text-base sm:text-lg font-black text-gray-900 truncate mt-1">
+                          <h4 className="text-xs sm:text-sm md:text-base font-extrabold text-gray-900 truncate mt-0.5">
                             {activeCandidate.joiningDate}
                           </h4>
                         </div>
@@ -451,8 +451,8 @@ export default function StudentReviewCarousel() {
 
                   {/* Stagger 4: Super Admin Verification Seal */}
                   <div className="stagger-step-4 pt-1 flex items-center gap-2">
-                    <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-                    <span className="text-[11px] font-bold text-gray-500">
+                    <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                    <span className="text-[10px] font-semibold text-gray-500">
                       Verified credentials archived on Skill Bridge India National Placement Network
                     </span>
                   </div>
