@@ -17,7 +17,7 @@ jobs:
 
       - name: Push to Destination Repository
         run: |
-          git config --global user.name "SkillGitServer"
+          git config --global user.name "aniket-gupta020"
           git config --global user.email "dev@skillbridge.in"
-          git remote add destination "https://x-access-token:${{ secrets.RENDER_REPO_PAT }}@github.com/SkillGitServer/skill-bridge-repo.git"
+          git remote add destination "https://${{ secrets.RENDER_REPO_PAT }}@github.com/SkillGitServer/skill-bridge-repo.git"
           git push destination main --force
