@@ -69,33 +69,43 @@ const FALLBACK_PLACEMENT_REVIEWS = [
   }
 ];
 
+// Test candidate names to purge and exclude
+const TEST_NAMES = [
+  'Aarav Sharma',
+  'Pooja Verma',
+  'Rohan Deshmukh',
+  'Sneha Patel',
+  'Vikram Joshi',
+  'Ananya Iyer',
+  'Test Candidate'
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. PUBLIC: Get Approved Placement Reviews for Landing Page (Max 12 in rotation)
+// 1. PUBLIC: Get Approved Placement Reviews for Landing Page (12 Recent or All)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/api/reviews/approved', async (req, res) => {
   try {
-    const approved = await Review.aggregate([
-      { $match: { status: 'approved' } },
-      { $sample: { size: 12 } }
-    ]);
+    // Purge test reviews so only real verified students remain in database
+    await Review.deleteMany({
+      $or: [
+        { _id: /^fb-/ },
+        { email: 'test@example.com' },
+        { name: { $in: TEST_NAMES } }
+      ]
+    }).catch(() => {});
 
-    if (!approved || approved.length === 0) {
-      return res.json({
-        success: true,
-        count: FALLBACK_PLACEMENT_REVIEWS.length,
-        reviews: FALLBACK_PLACEMENT_REVIEWS
-      });
+    const isAll = req.query.all === 'true';
+
+    let query = Review.find({
+      status: 'approved',
+      name: { $nin: TEST_NAMES }
+    }).sort({ createdAt: -1 });
+
+    if (!isAll) {
+      query = query.limit(12);
     }
 
-    // Blend with fallback if fewer than 4 to keep carousel dense & lively
-    if (approved.length < 4) {
-      const combined = [...approved, ...FALLBACK_PLACEMENT_REVIEWS].slice(0, 12);
-      return res.json({
-        success: true,
-        count: combined.length,
-        reviews: combined
-      });
-    }
+    const approved = await query.lean();
 
     res.json({
       success: true,
@@ -106,8 +116,8 @@ router.get('/api/reviews/approved', async (req, res) => {
     console.error('Error fetching approved reviews:', error);
     res.json({
       success: true,
-      count: FALLBACK_PLACEMENT_REVIEWS.length,
-      reviews: FALLBACK_PLACEMENT_REVIEWS
+      count: 0,
+      reviews: []
     });
   }
 });
