@@ -18,13 +18,13 @@ import { API_BASE_URL } from '../../utils/api';
 export default function StudentReviewCarousel() {
   const [reviews, setReviews] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isManualInteracting, setIsManualInteracting] = useState(false);
   const [isAllModalOpen, setIsAllModalOpen] = useState(false);
   const [allSearchTerm, setAllSearchTerm] = useState('');
   const [isLoadingAll, setIsLoadingAll] = useState(false);
 
   const scrollRef = useRef(null);
-  const pauseTimerRef = useRef(null);
+  const manualTimeoutRef = useRef(null);
 
   // Fetch 12 most recent approved reviews for carousel
   useEffect(() => {
@@ -34,7 +34,8 @@ export default function StudentReviewCarousel() {
         const url = `${API_BASE_URL ? API_BASE_URL : ''}/api/reviews/approved`;
         const res = await axios.get(url);
         if (isMounted && res.data && Array.isArray(res.data.reviews)) {
-          setReviews(res.data.reviews);
+          // Exactly up to 12 candidates, no repeats
+          setReviews(res.data.reviews.slice(0, 12));
         }
       } catch (err) {
         console.warn('Could not fetch placement reviews:', err.message);
@@ -66,18 +67,20 @@ export default function StudentReviewCarousel() {
     }
   };
 
-  // Smooth continuous auto-scroll loop
+  // Continuous smooth auto-scroll loop (does NOT pause on mouse hover)
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || reviews.length === 0) return;
+    if (!el || reviews.length <= 1) return;
 
     let animationFrameId;
-    const scrollSpeed = 0.65;
+    const scrollSpeed = 0.7;
 
     const step = () => {
-      if (!isPaused && el) {
+      // Only scroll if content actually overflows the container and user is not clicking arrows
+      if (!isManualInteracting && el.scrollWidth > el.clientWidth) {
         el.scrollLeft += scrollSpeed;
-        if (el.scrollLeft >= el.scrollWidth / 2) {
+        // Loop back when reaching the end
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
           el.scrollLeft = 0;
         }
       }
@@ -86,24 +89,37 @@ export default function StudentReviewCarousel() {
 
     animationFrameId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isPaused, reviews]);
+  }, [isManualInteracting, reviews.length]);
 
-  // Working manual scroll buttons (< and >)
+  // Working manual scroll buttons (< and >) with smooth looping
   const handleManualScroll = (direction) => {
-    // 1. Temporarily pause auto-scroll so the click animation is smooth and doesn't get fought
-    setIsPaused(true);
-    if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
-    pauseTimerRef.current = setTimeout(() => {
-      setIsPaused(false);
-    }, 4000);
+    const el = scrollRef.current;
+    if (!el) return;
 
-    // 2. Perform smooth scroll
-    if (scrollRef.current) {
-      const scrollAmount = 340;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
+    // Pause auto-scroll briefly so the manual jump completes smoothly
+    setIsManualInteracting(true);
+    if (manualTimeoutRef.current) clearTimeout(manualTimeoutRef.current);
+    manualTimeoutRef.current = setTimeout(() => {
+      setIsManualInteracting(false);
+    }, 2500);
+
+    const stepAmount = 340;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+
+    if (maxScroll <= 0) return; // cards fit on screen, nothing to scroll
+
+    if (direction === 'right') {
+      if (el.scrollLeft >= maxScroll - 15) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: stepAmount, behavior: 'smooth' });
+      }
+    } else {
+      if (el.scrollLeft <= 15) {
+        el.scrollTo({ left: maxScroll, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: -stepAmount, behavior: 'smooth' });
+      }
     }
   };
 
@@ -119,21 +135,16 @@ export default function StudentReviewCarousel() {
 
   const getCardAccent = (idx) => {
     const accents = [
-      { border: 'border-amber-300/60', glow: 'from-amber-400/25 to-yellow-400/5', badge: 'bg-amber-500/10 text-amber-700' },
-      { border: 'border-indigo-300/60', glow: 'from-indigo-400/25 to-blue-400/5', badge: 'bg-indigo-500/10 text-indigo-700' },
-      { border: 'border-teal-300/60', glow: 'from-teal-400/25 to-emerald-400/5', badge: 'bg-teal-500/10 text-teal-700' },
-      { border: 'border-rose-300/60', glow: 'from-rose-400/25 to-orange-400/5', badge: 'bg-rose-500/10 text-rose-700' }
+      { border: 'border-amber-300/60', glow: 'from-amber-400/25 to-yellow-400/5' },
+      { border: 'border-indigo-300/60', glow: 'from-indigo-400/25 to-blue-400/5' },
+      { border: 'border-teal-300/60', glow: 'from-teal-400/25 to-emerald-400/5' },
+      { border: 'border-rose-300/60', glow: 'from-rose-400/25 to-orange-400/5' }
     ];
     return accents[idx % accents.length];
   };
 
-  // If reviews exist, loop them enough times so the track scrolls seamlessly
-  const displayItems =
-    reviews.length > 0
-      ? reviews.length < 5
-        ? [...reviews, ...reviews, ...reviews, ...reviews]
-        : [...reviews, ...reviews]
-      : [];
+  // Strictly 1 card per candidate, up to 12 candidates, NO repeats
+  const displayItems = reviews.slice(0, 12);
 
   // Filtered all-candidates list for modal
   const filteredAll = (allReviews.length > 0 ? allReviews : reviews).filter((item) => {
@@ -172,7 +183,10 @@ export default function StudentReviewCarousel() {
             <button
               onClick={() => handleManualScroll('left')}
               aria-label="Previous story"
-              className="p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
+              disabled={displayItems.length <= 1}
+              className={`p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md ${
+                displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+              }`}
             >
               <ChevronLeft size={18} />
             </button>
@@ -189,26 +203,25 @@ export default function StudentReviewCarousel() {
             <button
               onClick={() => handleManualScroll('right')}
               aria-label="Next story"
-              className="p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
+              disabled={displayItems.length <= 1}
+              className={`p-3 rounded-full bg-white/70 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md ${
+                displayItems.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+              }`}
             >
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
 
-        {/* Carousel Container — No white bars, seamless pastel backdrop */}
-        {reviews.length > 0 ? (
-          <div
-            className="relative w-full overflow-visible py-4"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            onTouchStart={() => setIsPaused(true)}
-            onTouchEnd={() => setIsPaused(false)}
-          >
-            {/* Scrolling Track */}
+        {/* Carousel Container — No mouse hover pause, no white bars, pure seamless backdrop */}
+        {displayItems.length > 0 ? (
+          <div className="relative w-full overflow-visible py-4">
+            {/* Scrolling Track: Centered when 1-2 items, scrollable when overflow */}
             <div
               ref={scrollRef}
-              className="flex gap-6 overflow-x-auto overflow-y-visible py-6 px-4 scroll-smooth no-scrollbar"
+              className={`flex gap-6 overflow-x-auto overflow-y-visible py-6 px-4 scroll-smooth no-scrollbar ${
+                displayItems.length <= 2 ? 'justify-center' : 'justify-start'
+              }`}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {displayItems.map((item, idx) => {
@@ -216,7 +229,7 @@ export default function StudentReviewCarousel() {
 
                 return (
                   <div
-                    key={`${item._id || idx}-${idx}`}
+                    key={item._id || idx}
                     className={`group relative flex-shrink-0 w-[290px] sm:w-[320px] bg-white/40 hover:bg-white/60 backdrop-blur-2xl border ${accent.border} rounded-3xl p-5 shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-2.5 transition-all duration-300 flex flex-col justify-between text-left`}
                   >
                     {/* Ambient Glow behind Cutout */}
@@ -313,7 +326,7 @@ export default function StudentReviewCarousel() {
             <Sparkles size={28} className="text-amber-500 mx-auto mb-2 animate-bounce" />
             <h4 className="text-base font-extrabold text-gray-800">Placement Stories Updating</h4>
             <p className="text-xs text-gray-500 mt-1">
-              Verified candidate placement reviews are currently being approved and will appear right here!
+              Verified candidate placement reviews will appear right here as soon as approved!
             </p>
           </div>
         )}
