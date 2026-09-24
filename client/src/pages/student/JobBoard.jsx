@@ -79,10 +79,7 @@ function JobBoard() {
     setFilteredJobs(filtered);
   };
 
-  const handleLockedAction = (actionName = 'Feature') => {
-    toast.error(`🔒 Upgrade Required: ${actionName} is exclusive to Pro & Premium members. Please upgrade your profile!`, {
-      duration: 3500,
-    });
+  const handleLockedAction = () => {
     setShowUpgradeModal(true);
   };
 
