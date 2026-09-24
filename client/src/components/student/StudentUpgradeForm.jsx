@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { ChevronDown } from 'lucide-react';
 import PullToRefreshWrapper from '../shared/PullToRefreshWrapper';
 import PhoneInput from '../shared/PhoneInput';
 import { getAuthToken } from '../../utils/auth';
@@ -38,6 +39,11 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
   // Verified Job Openings state
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [isBottomJobsExpanded, setIsBottomJobsExpanded] = useState(false);
+
+  // 1-2 latest openings at top, remaining in collapsible bottom section
+  const topJobs = jobs.slice(0, 2);
+  const remainingJobs = jobs.slice(2);
 
   // Pre-load student profile data
   useEffect(() => {
@@ -392,7 +398,7 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
           </div>
 
           {/* ── Top Verified Job Openings Preview ── */}
-          {jobs.length > 0 && (
+          {topJobs.length > 0 && (
             <div className="mb-6 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border border-emerald-500/30 rounded-3xl p-4 sm:p-5 text-left shadow-lg animate-fade-in">
               <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-2">
@@ -407,13 +413,13 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
                   </div>
                 </div>
                 <span className="text-[9px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  {jobs.length} Roles
+                  {topJobs.length} {topJobs.length === 1 ? 'Role' : 'Roles'}
                 </span>
               </div>
 
               {/* Job Cards */}
               <div className="space-y-2.5">
-                {jobs.slice(0, 3).map((job) => (
+                {topJobs.map((job) => (
                   <div
                     key={job._id || job.id}
                     className="bg-black/35 hover:bg-black/55 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-3.5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
@@ -751,77 +757,98 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
           </form>
         </div>
 
-        {/* ── Active Verified Job Openings (Bottom Side) ── */}
-        {jobs.length > 0 && (
+        {/* ── Active Verified Job Openings (Bottom Side - Collapsible) ── */}
+        {remainingJobs.length > 0 && (
           <div className="max-w-lg w-full mx-auto mt-6 mb-8 z-10 animate-fade-in-up">
-            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-6 sm:p-7 shadow-[0_20px_60px_rgba(0,0,0,0.5)] text-left">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] text-left transition-all">
+              <button
+                type="button"
+                onClick={() => setIsBottomJobsExpanded((prev) => !prev)}
+                className="w-full flex items-center justify-between cursor-pointer group text-left focus:outline-none"
+                aria-expanded={isBottomJobsExpanded}
+              >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xl shadow-sm">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xl shadow-sm group-hover:scale-105 transition-transform">
                     💼
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white tracking-tight">
-                      Active Job Openings
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-black text-white tracking-tight group-hover:text-emerald-300 transition-colors">
+                        Active Job Openings
+                      </h3>
+                      <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                        {isBottomJobsExpanded ? 'Click to collapse' : 'Click to show more'}
+                      </span>
+                    </div>
                     <p className="text-[10px] text-gray-300 font-medium">
-                      Complete student profile credentials above to apply directly
+                      {isBottomJobsExpanded
+                        ? 'Complete student profile credentials above to apply directly'
+                        : `${remainingJobs.length} more verified opening${remainingJobs.length === 1 ? '' : 's'} available`}
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  {jobs.length} Verified
-                </span>
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    +{remainingJobs.length} More
+                  </span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-400 group-hover:text-white transition-transform duration-300 ${
+                      isBottomJobsExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+              </button>
 
-              <div className="space-y-3.5">
-                {jobs.map((job) => (
-                  <div
-                    key={job._id || job.id}
-                    className="bg-black/25 hover:bg-black/45 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 text-left group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">
-                          {job.company}
-                        </span>
-                        <span className="text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                          {job.jobType || 'Full-Time'}
-                        </span>
+              {isBottomJobsExpanded && (
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-3.5 animate-fade-in">
+                  {remainingJobs.map((job) => (
+                    <div
+                      key={job._id || job.id}
+                      className="bg-black/25 hover:bg-black/45 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 text-left group"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">
+                            {job.company}
+                          </span>
+                          <span className="text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                            {job.jobType || 'Full-Time'}
+                          </span>
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-emerald-300 transition-colors">
+                          {job.title}
+                        </h4>
+                        {job.description && (
+                          <p className="text-[10px] text-gray-300 line-clamp-2 mt-1 leading-relaxed">
+                            {job.description}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-400 font-medium">
+                          <span>📍 {job.location || 'Remote'}</span>
+                          <span>💰 {job.salary || 'Best in Industry'}</span>
+                        </div>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-emerald-300 transition-colors">
-                        {job.title}
-                      </h4>
-                      {job.description && (
-                        <p className="text-[10px] text-gray-300 line-clamp-2 mt-1 leading-relaxed">
-                          {job.description}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-400 font-medium">
-                        <span>📍 {job.location || 'Remote'}</span>
-                        <span>💰 {job.salary || 'Best in Industry'}</span>
+
+                      <div className="pt-2 border-t border-white/10 flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyClick(job)}
+                          className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>Apply</span>
+                          <span className="text-[10px]">📝</span>
+                        </button>
                       </div>
                     </div>
+                  ))}
 
-                    <div className="pt-2 border-t border-white/10 flex items-center justify-end">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyClick(job)}
-                        className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <span>Apply</span>
-                        <span className="text-[10px]">📝</span>
-                      </button>
-                    </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 text-center">
+                    <p className="text-[10px] text-gray-400 font-medium">
+                      Corporate partner openings require completed student credentials to apply.
+                    </p>
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-white/10 text-center">
-                <p className="text-[10px] text-gray-400 font-medium">
-                  Corporate partner openings require completed student credentials to apply.
-                </p>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}
