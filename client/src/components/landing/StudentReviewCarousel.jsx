@@ -16,6 +16,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { API_BASE_URL } from '../../utils/api';
+import EditableText from '../shared/EditableText';
+import { defaultLandingContent } from '../../constants/landingDefaults';
 
 // Smart helper to auto-detect and remove accidental black backgrounds on cutout photos
 const cleanCutoutImage = (src) => {
@@ -68,7 +70,17 @@ const cleanCutoutImage = (src) => {
   });
 };
 
-export default function StudentReviewCarousel() {
+export default function StudentReviewCarousel({
+  contentOverride,
+  isEditing = false,
+  onFieldChange,
+  isEditorPreview = false
+} = {}) {
+  const badge = contentOverride?.placementBadge || defaultLandingContent.placementBadge || 'Placement Success';
+  const title = contentOverride?.placementTitle || defaultLandingContent.placementTitle || 'Real Candidates. Real Careers.';
+  const subtitle = contentOverride?.placementSubtitle || defaultLandingContent.placementSubtitle || 'Meet the ambitious candidates from Skill Bridge India who verified their skills and secured direct industry placements.';
+  const buttonText = contentOverride?.placementButtonText || defaultLandingContent.placementButtonText || 'Placed Candidates';
+
   const [reviews, setReviews] = useState([]);
   const [allReviews, setAllReviews] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -293,54 +305,79 @@ export default function StudentReviewCarousel() {
         <div className="text-center mb-8 space-y-3">
           <span className="inline-flex items-center gap-1.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xs">
             <Sparkles size={13} className="text-amber-400" />
-            <span>Placement Success</span>
+            <EditableText
+              isEditing={isEditing}
+              value={badge}
+              onSave={(val) => onFieldChange && onFieldChange('placementBadge', val)}
+              title="Click to edit section badge"
+            />
           </span>
 
           <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-            Real Candidates. Real Careers.
+            <EditableText
+              isEditing={isEditing}
+              value={title}
+              onSave={(val) => onFieldChange && onFieldChange('placementTitle', val)}
+              title="Click to edit section heading"
+            />
           </h2>
 
           <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-            Meet the ambitious candidates from Skill Bridge India who verified their skills and secured direct industry placements.
+            <EditableText
+              isEditing={isEditing}
+              value={subtitle}
+              onSave={(val) => onFieldChange && onFieldChange('placementSubtitle', val)}
+              title="Click to edit section description"
+            />
           </p>
 
-          {/* Navigation Controls & Placed Candidates Button (Clean Single Row on Mobile) */}
+          {/* Navigation Controls & Placed Candidates Button */}
           <div className="flex items-center justify-center gap-2 sm:gap-3 pt-2 flex-nowrap max-w-full overflow-x-hidden">
-            <button
-              onClick={handlePrev}
-              aria-label="Previous candidate"
-              disabled={reviews.length <= 1}
-              className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
-                reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
-              }`}
-            >
-              <ChevronLeft size={18} />
-            </button>
+            {!isEditing && (
+              <button
+                onClick={handlePrev}
+                aria-label="Previous candidate"
+                disabled={reviews.length <= 1}
+                className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
+                  reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+                }`}
+              >
+                <ChevronLeft size={18} />
+              </button>
+            )}
 
             <button
-              onClick={handleOpenAllModal}
+              onClick={isEditing ? undefined : handleOpenAllModal}
               className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-105 text-black font-black text-[11px] sm:text-xs uppercase tracking-wider shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-amber-300 shrink-0 whitespace-nowrap"
             >
               <Award size={15} />
-              <span>Placed Candidates</span>
+              <EditableText
+                isEditing={isEditing}
+                value={buttonText}
+                onSave={(val) => onFieldChange && onFieldChange('placementButtonText', val)}
+                title="Click to edit button text"
+              />
               <ArrowRight size={14} />
             </button>
 
-            <button
-              onClick={handleNext}
-              aria-label="Next candidate"
-              disabled={reviews.length <= 1}
-              className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
-                reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
-              }`}
-            >
-              <ChevronRight size={18} />
-            </button>
+            {!isEditing && (
+              <button
+                onClick={handleNext}
+                aria-label="Next candidate"
+                disabled={reviews.length <= 1}
+                className={`p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white border border-gray-200/80 text-gray-800 shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md shrink-0 ${
+                  reviews.length <= 1 ? 'opacity-40 cursor-not-allowed hover:scale-100' : ''
+                }`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ── Large-Format Card Layout ── */}
-        {activeCandidate ? (
+        {/* ── Large-Format Card Layout (Hidden inside Landing Page Editor) ── */}
+        {!isEditing && !isEditorPreview && (
+          activeCandidate ? (
           <div className="w-full max-w-4xl mx-auto px-2">
             <div
               key={activeCandidate._id || currentIndex}
@@ -489,7 +526,8 @@ export default function StudentReviewCarousel() {
               Verified candidate placement reviews will appear right here as soon as approved!
             </p>
           </div>
-        )}
+        )
+      )}
       </div>
 
       {/* ── View All Placed Candidates Modal ── */}

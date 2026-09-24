@@ -23,6 +23,11 @@ const landingContentSchema = new mongoose.Schema({
   benefitsSubtitle: { type: String, default: "From your first assessment to your career milestone, we've built tools that work for you." },
   benefitCards: { type: Array, default: [] },
 
+  placementBadge: { type: String, default: "Placement Success" },
+  placementTitle: { type: String, default: "Real Candidates. Real Careers." },
+  placementSubtitle: { type: String, default: "Meet the ambitious candidates from Skill Bridge India who verified their skills and secured direct industry placements." },
+  placementButtonText: { type: String, default: "Placed Candidates" },
+
   aboutBadge: { type: String, default: "About Us" },
   aboutTitle: { type: String, default: "Our foundation." },
   aboutSubtitle: { type: String, default: "Skill Bridge India is built on a commitment to fairness, transparency, and meaningful career development." },

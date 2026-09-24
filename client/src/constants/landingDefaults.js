@@ -70,6 +70,12 @@ export const defaultLandingContent = {
     }
   ],
 
+  // Placement Stories Section
+  placementBadge: "Placement Success",
+  placementTitle: "Real Candidates. Real Careers.",
+  placementSubtitle: "Meet the ambitious candidates from Skill Bridge India who verified their skills and secured direct industry placements.",
+  placementButtonText: "Placed Candidates",
+
   // About Us
   aboutBadge: "About Us",
   aboutTitle: "Our foundation.",

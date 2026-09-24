@@ -842,7 +842,12 @@ export default function LandingSections({ contentOverride, isEditing, onFieldCha
         <WhyChooseUs contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <HowItWorks contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <CandidateBenefits contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
-        <StudentReviewCarousel />
+        <StudentReviewCarousel
+          contentOverride={contentOverride}
+          isEditing={isEditing}
+          onFieldChange={onFieldChange}
+          isEditorPreview={isEditorPreview}
+        />
         <AboutUs contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
         <FAQ contentOverride={contentOverride} isEditing={isEditing} onFieldChange={onFieldChange} />
       </div>
