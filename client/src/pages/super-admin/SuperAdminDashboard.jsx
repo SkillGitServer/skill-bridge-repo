@@ -218,7 +218,9 @@ function SuperAdminDashboard() {
       }
     } catch (err) {
       console.error('Failed to trigger backup:', err);
-      toast.error('Backup failed. Check server logs for Google Drive errors.');
+      const detailedErr = err.response?.data?.message || err.response?.data?.error || err.message || 'Backup failed. Check server logs for Google Drive errors.';
+      toast.error(detailedErr, { duration: 5000 });
+      fetchBackupStatus();
     } finally {
       setIsTriggeringBackup(false);
     }

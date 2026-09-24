@@ -85,31 +85,57 @@ async function generateDatabaseSnapshot() {
   };
 }
 
-// Upload file stream to designated Google Drive folder
+// Upload file stream to designated Google Drive folder with resilient fallback
 async function uploadSnapshotToDrive(drive, fileObj) {
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID || '17YddH3Jk5m6YdhRnqeH-BT7FPgCAjaBc';
+  const folderId = (process.env.GOOGLE_DRIVE_FOLDER_ID || '1VVaw7xv2eeM4zj60MfGfWXK920KSGiH').trim();
 
-  const bufferStream = new stream.PassThrough();
-  bufferStream.end(fileObj.buffer);
-
-  const fileMetadata = {
-    name: fileObj.filename,
-    parents: [folderId]
+  const createStream = () => {
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(fileObj.buffer);
+    return bufferStream;
   };
 
-  const media = {
-    mimeType: 'application/json',
-    body: bufferStream
-  };
+  try {
+    const fileMetadata = {
+      name: fileObj.filename,
+      parents: folderId ? [folderId] : []
+    };
 
-  const response = await drive.files.create({
-    requestBody: fileMetadata,
-    media: media,
-    supportsAllDrives: true,
-    fields: 'id, name, createdTime, size'
-  });
+    const media = {
+      mimeType: 'application/json',
+      body: createStream()
+    };
 
-  return response.data;
+    const response = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      supportsAllDrives: true,
+      fields: 'id, name, createdTime, size'
+    });
+
+    return response.data;
+  } catch (err) {
+    console.warn(`[BACKUP SERVICE] Upload to folder ${folderId} failed (${err.message}). Retrying upload to Drive root...`);
+    
+    // Fallback: upload directly to root without parent folder if folder scope/permissions reject it
+    const fallbackMetadata = {
+      name: fileObj.filename
+    };
+
+    const media = {
+      mimeType: 'application/json',
+      body: createStream()
+    };
+
+    const response = await drive.files.create({
+      requestBody: fallbackMetadata,
+      media: media,
+      supportsAllDrives: true,
+      fields: 'id, name, createdTime, size'
+    });
+
+    return response.data;
+  }
 }
 
 // Fetch current backup status from MongoDB settings
