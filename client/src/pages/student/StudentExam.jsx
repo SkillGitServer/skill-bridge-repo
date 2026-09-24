@@ -951,7 +951,7 @@ function StudentExam() {
                   🚀 Preparing a customized exam from the <strong>{currentCategoryName}</strong> bank.{' '}
                   {!isUnlocked ? (
                     <span className="text-amber-900 font-bold block mt-1">
-                      ℹ️ Trial Allocation: You will receive 10 questions for this assessment. Upgraded accounts can access full 20 to 50-question sets.
+                      ℹ️ Profile Status: You will receive 10 questions for this assessment. Complete your profile to access full 20 to 50-question sets.
                     </span>
                   ) : category === 'combined' ? (
                     `Total database pool size is ${totalQuestions} questions.`
@@ -983,7 +983,7 @@ function StudentExam() {
                             type="button"
                             onClick={() => {
                               if (isLockedForTrial) {
-                                toast.error('🔒 Upgrade Required: Assessments with more than 10 questions are exclusive to upgraded accounts!');
+                                toast.error('🔒 Profile Verification Required: Assessments with more than 10 questions require a completed student profile!');
                                 setShowUpgradeForm(true);
                                 return;
                               }
@@ -1013,7 +1013,7 @@ function StudentExam() {
                           onClick={() => setShowUpgradeForm(true)}
                           className="text-[11px] font-extrabold text-amber-800 bg-amber-200/80 hover:bg-amber-300 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                         >
-                          Unlock 20-50 Qs 👑
+                          Complete Profile to Unlock 🎓
                         </button>
                       </div>
                     )}
@@ -1168,9 +1168,9 @@ function StudentExam() {
                       </p>
                       <button
                         onClick={() => setShowUpgradeForm(true)}
-                        className="mt-2.5 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-98"
+                        className="mt-2.5 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer active:scale-98"
                       >
-                        Upgrade Profile to Unlock 20–50 Questions 👑
+                        Complete Profile to Unlock 20–50 Questions 🎓
                       </button>
                     </div>
                   )}

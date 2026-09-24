@@ -362,9 +362,9 @@ function ResumeReview() {
                   ) : (
                     <button 
                       onClick={() => setShowUpgradeForm(true)}
-                      className="bg-orange-50 hover:bg-orange-100 text-orange-600 font-extrabold px-6 py-3.5 rounded-2xl text-xs border border-orange-200 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
+                      className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold px-6 py-3.5 rounded-2xl text-xs border border-emerald-200 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
                     >
-                      🔒 Unlock & Upgrade to Analyze Resume
+                      📝 Complete Profile to Analyze Resume
                     </button>
                   )}
                 </div>
@@ -444,23 +444,23 @@ function ResumeReview() {
               )}
 
               {!isUnlocked ? (
-                /* Premium Lock Notification card */
-                <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-white/40 text-center py-12 flex flex-col items-center justify-center gap-4 w-full animate-scale-in relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-black tracking-widest uppercase px-4 py-1.5 rounded-bl-2xl">
-                    Premium Feature
+                /* Profile Completion Lock Notification card */
+                <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-sm border border-emerald-100 text-center py-12 flex flex-col items-center justify-center gap-4 w-full animate-scale-in relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[9px] font-black tracking-widest uppercase px-4 py-1.5 rounded-bl-2xl">
+                    Profile Verification
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-red-500 text-3xl animate-bounce">
-                    🔒
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 text-3xl shadow-xs">
+                    🎓
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 font-sans">AI Resume Analysis Locked</h3>
+                  <h3 className="text-lg font-bold text-gray-900 font-sans">Complete Profile to Unlock AI Analysis</h3>
                   <p className="text-xs text-gray-500 leading-relaxed max-w-md">
-                    AI Resume Critique and ATS Score ratings are premium tools. Complete your profile and upgrade your subscription to instantly unlock full access.
+                    AI Resume Critique and ATS Score ratings require completed student credentials. Submit your academic qualifications and mobile number to instantly unlock full access.
                   </p>
                   <button
                     onClick={() => setShowUpgradeForm(true)}
-                    className="mt-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold px-8 py-4 rounded-2xl text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                    className="mt-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold px-8 py-4 rounded-2xl text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
                   >
-                    🚀 Upgrade Subscription Now
+                    🎓 Complete Student Profile Now
                   </button>
                 </div>
               ) : !aiAnalysis ? (

@@ -114,7 +114,7 @@ function StudentResults() {
 
   const handleViewPdf = (result) => {
     if (!isUnlocked) {
-      toast.error('🔒 Upgrade Required: PDF view is locked for free accounts. Please upgrade your profile.');
+      toast.error('🔒 Profile Verification Required: PDF view requires completed student credentials. Please complete your profile.');
       setShowUpgradeForm(true);
       return;
     }
@@ -132,7 +132,7 @@ function StudentResults() {
 
   const handleInstantDownload = async (result) => {
     if (!isUnlocked) {
-      toast.error('🔒 Upgrade Required: PDF downloads are locked for free accounts. Please upgrade your profile.');
+      toast.error('🔒 Profile Verification Required: PDF downloads require completed student credentials. Please complete your profile.');
       setShowUpgradeForm(true);
       return;
     }
@@ -337,10 +337,10 @@ function StudentResults() {
                         <button
                           type="button"
                           onClick={() => handleViewPdf(result)}
-                          className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-extrabold text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 transition-all cursor-pointer"
+                          className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer"
                         >
-                          <span>🔒</span>
-                          <span>Upgrade Required</span>
+                          <span>📝</span>
+                          <span>Complete Profile to View</span>
                         </button>
                       )}
                     </div>
