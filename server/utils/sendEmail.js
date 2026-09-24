@@ -8,9 +8,9 @@ const axios = require('axios');
  * @returns {Promise<boolean>}
  */
 const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS || '';
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@skillbridge.in';
-  const senderName = process.env.BREVO_SENDER_NAME || 'Skill Bridge India';
+  const apiKey = (process.env.BREVO_API_KEY || process.env.SMTP_PASS || '').trim();
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@skillbridge.in').trim();
+  const senderName = (process.env.BREVO_SENDER_NAME || 'Skill Bridge India').trim();
 
   // Format recipient for Brevo API JSON schema: [ { "email": "user@example.com" } ]
   const recipientEmail = typeof to === 'string' ? to : (to?.email || String(to));
