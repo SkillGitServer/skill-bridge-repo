@@ -315,38 +315,38 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
     };
 
     return (
-      <div className="bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black min-h-screen w-full flex flex-col items-center justify-center p-6 text-center font-sans text-white z-[9999] fixed inset-0">
-        <div className="bg-white/10 backdrop-blur-2xl border border-emerald-500/40 rounded-3xl p-8 max-w-md w-full mx-auto shadow-[0_20px_60px_rgba(16,185,129,0.3)] text-center space-y-6 animate-scale-in">
+      <div className="bg-slate-950/80 backdrop-blur-xl min-h-screen w-full flex flex-col items-center justify-center p-6 text-center font-sans z-[9999] fixed inset-0">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-auto shadow-2xl border border-emerald-100 text-center space-y-6 animate-scale-in">
           <div className="relative w-20 h-20 mx-auto">
-            <span className="absolute inset-0 rounded-full bg-emerald-400/30 animate-ping" />
-            <div className="relative w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center text-white text-4xl shadow-lg shadow-emerald-500/40">
+            <span className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping" />
+            <div className="relative w-20 h-20 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-full flex items-center justify-center text-white text-4xl shadow-lg shadow-emerald-500/30">
               ✓
             </div>
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-3xl font-black text-white tracking-tight">Profile Completed!</h2>
-            <p className="text-xs text-emerald-300 font-bold">
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Profile Completed!</h2>
+            <p className="text-xs text-emerald-600 font-bold">
               Your credentials are saved. You now have permanent free access to all platform features.
             </p>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2.5">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left space-y-2.5">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-400 font-semibold">Account Status:</span>
-              <span className="text-emerald-400 font-extrabold uppercase flex items-center gap-1">
+              <span className="text-gray-500 font-semibold">Account Status:</span>
+              <span className="text-emerald-600 font-extrabold uppercase flex items-center gap-1">
                 <span>●</span> ACTIVE / FULL ACCESS (PERMANENT)
               </span>
             </div>
             {submissionData?.mobile && (
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-400 font-semibold">Registered Mobile:</span>
-                <span className="text-white font-mono font-bold">+91 {submissionData.mobile}</span>
+                <span className="text-gray-500 font-semibold">Registered Mobile:</span>
+                <span className="text-gray-900 font-mono font-bold">+91 {submissionData.mobile}</span>
               </div>
             )}
             <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-400 font-semibold">Job Applications:</span>
-              <span className="text-emerald-300 font-bold bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="text-gray-500 font-semibold">Job Applications:</span>
+              <span className="text-emerald-700 font-bold bg-emerald-100/70 px-2.5 py-0.5 rounded-full border border-emerald-200">
                 Unlocked 🚀
               </span>
             </div>
@@ -354,7 +354,7 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
 
           <button
             onClick={handleGoToDashboard}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black py-4 rounded-2xl shadow-[0_10px_25px_rgba(16,185,129,0.4)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-wider cursor-pointer"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold py-3.5 rounded-2xl shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-wider cursor-pointer"
           >
             🚀 Go to Dashboard
           </button>
@@ -365,493 +365,509 @@ function StudentUpgradeForm({ onBack, showBack, hasUploadedResume = false }) {
 
   return (
     <PullToRefreshWrapper>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black z-[9999] relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-emerald-500/10 blur-[120px] rounded-full" />
-          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-blue-500/10 blur-[120px] rounded-full" />
-        </div>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 font-sans w-full select-none text-left">
+        {/* ── Sidebar / Header (Dark - matching StudentDashboard & ResumeReview) ── */}
+        <div className="w-full text-white px-6 md:px-8 relative overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.3)] flex flex-col z-10 bg-[#0a0a0a] pt-6 pb-16">
+          {/* Ambient Glow Blobs */}
+          <div className="absolute top-10 left-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none z-0 animate-float" />
+          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-teal-500/10 rounded-full blur-[60px] pointer-events-none z-0 animate-float delay-400" />
 
-        <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 max-w-lg w-full mx-auto shadow-[0_20px_60px_rgba(0,0,0,0.5)] z-10 animate-fade-in-up">
-          {showBack && (
-            <div className="flex justify-start mb-6">
+          {/* Top Row: Back button anchored left, centered page label */}
+          <div className="flex items-center justify-center relative w-full mb-8 md:mb-10 z-10">
+            {showBack && (
               <button
+                type="button"
                 onClick={onBack}
-                className="group flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 text-white font-extrabold text-[11px] uppercase tracking-wider transition-all duration-300 border border-white/10 hover:border-emerald-500/30 cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:scale-102 active:scale-98"
+                className="absolute left-0 p-2.5 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors text-white cursor-pointer group flex items-center justify-center shadow-md active:scale-95"
+                aria-label="Back to Dashboard"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-emerald-400 group-hover:-translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to Dashboard
               </button>
-            </div>
-          )}
+            )}
+            <h2 className="text-xl font-bold text-white tracking-wide">Complete Profile</h2>
+          </div>
 
-          {/* ── Form Header ── */}
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-tr from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+          {/* Feature Icon & Info */}
+          <div className="flex flex-col items-center text-center relative z-10 md:mt-2">
+            <div className="w-20 h-20 rounded-3xl bg-white/10 border border-white/15 shadow-xl mb-4 flex items-center justify-center text-3xl shadow-emerald-500/20">
               🎓
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">Complete Your Student Profile</h2>
-            <p className="text-xs text-gray-300 mt-2 font-semibold leading-relaxed">
+            <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">
+              Complete Your Student Profile
+            </h1>
+            <p className="text-xs text-gray-400 mt-2 max-w-lg mx-auto leading-relaxed px-2">
               Submit your academic qualifications and valid mobile number to complete your student credentials. Enjoy immediate, permanent free access to corporate job applications, verified assessments, and career mentorship.
             </p>
           </div>
-
-          {/* ── Top Verified Job Openings Preview ── */}
-          {topJobs.length > 0 && (
-            <div className="mb-6 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border border-emerald-500/30 rounded-3xl p-4 sm:p-5 text-left shadow-lg animate-fade-in">
-              <div className="flex items-center justify-between mb-3.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">💼</span>
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">
-                      Verified Job Openings
-                    </h4>
-                    <p className="text-[10px] text-emerald-300/90 font-medium">
-                      Complete your profile credentials below to apply directly
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[9px] font-black bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  {topJobs.length} {topJobs.length === 1 ? 'Role' : 'Roles'}
-                </span>
-              </div>
-
-              {/* Job Cards */}
-              <div className="space-y-2.5">
-                {topJobs.map((job) => (
-                  <div
-                    key={job._id || job.id}
-                    className="bg-black/35 hover:bg-black/55 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-3.5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide truncate">
-                          {job.company}
-                        </span>
-                        <span className="text-[9px] text-gray-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded">
-                          {job.jobType || 'Full-Time'}
-                        </span>
-                      </div>
-                      <h5 className="text-xs font-black text-white truncate">
-                        {job.title}
-                      </h5>
-                      <div className="flex items-center gap-2 mt-1 text-[9px] text-gray-300 font-mono">
-                        <span>📍 {job.location || 'Remote'}</span>
-                        <span>•</span>
-                        <span>💰 {job.salary || 'Competitive'}</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleApplyClick(job)}
-                      className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-[11px] uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer shrink-0 text-center flex items-center justify-center gap-1"
-                    >
-                      <span>Apply</span>
-                      <span className="text-[10px]">📝</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmitProfile} className="space-y-4">
-            {/* ─── 10th Qualification Card ─── */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 space-y-3 shadow-inner">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
-                  🎓 10th Standard Qualification
-                </span>
-                {(docGrade10 || existingDocs.docGrade10) && percentage10th.trim() && (
-                  <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                    ✓ Ready
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="percentage10th" className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    10th Percentage (%)
-                  </label>
-                  <input
-                    id="percentage10th"
-                    name="percentage10th"
-                    type="text"
-                    placeholder="e.g. 85.5%"
-                    value={percentage10th}
-                    onChange={(e) => setPercentage10th(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700/80 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    10th Marksheet (PDF Only)
-                  </label>
-                  <input
-                    id="doc-10th-upload"
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onChange={e => handleFileSelect(e, setDocGrade10, '10th')}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('doc-10th-upload').click()}
-                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-black transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
-                      docGrade10
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                        : existingDocs.docGrade10
-                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="text-sm">{docGrade10 || existingDocs.docGrade10 ? '📄' : '📤'}</span>
-                      <span className="truncate">
-                        {docGrade10 ? docGrade10.name : (existingDocs.docGrade10 ? 'Uploaded Marksheet' : 'Upload 10th PDF')}
-                      </span>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
-                      docGrade10 || existingDocs.docGrade10 ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
-                    }`}>
-                      {docGrade10 ? 'PDF Attached' : (existingDocs.docGrade10 ? 'Uploaded' : 'Select PDF')}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ─── 12th Qualification Card ─── */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 space-y-3 shadow-inner">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
-                  🎓 12th Standard Qualification
-                </span>
-                {(docGrade12 || existingDocs.docGrade12) && percentage12th.trim() && (
-                  <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                    ✓ Ready
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="percentage12th" className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    12th Percentage (%)
-                  </label>
-                  <input
-                    id="percentage12th"
-                    name="percentage12th"
-                    type="text"
-                    placeholder="e.g. 88.0%"
-                    value={percentage12th}
-                    onChange={(e) => setPercentage12th(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700/80 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    12th Marksheet (PDF Only)
-                  </label>
-                  <input
-                    id="doc-12th-upload"
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onChange={e => handleFileSelect(e, setDocGrade12, '12th')}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('doc-12th-upload').click()}
-                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-black transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
-                      docGrade12
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                        : existingDocs.docGrade12
-                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="text-sm">{docGrade12 || existingDocs.docGrade12 ? '📄' : '📤'}</span>
-                      <span className="truncate">
-                        {docGrade12 ? docGrade12.name : (existingDocs.docGrade12 ? 'Uploaded Marksheet' : 'Upload 12th PDF')}
-                      </span>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
-                      docGrade12 || existingDocs.docGrade12 ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'
-                    }`}>
-                      {docGrade12 ? 'PDF Attached' : (existingDocs.docGrade12 ? 'Uploaded' : 'Select PDF')}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Graduation Qualification Card (New Section) ─── */}
-            <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 space-y-3 shadow-inner">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-teal-400 tracking-wider flex items-center gap-1.5">
-                  🎓 Graduation Qualification
-                </span>
-                {(docGraduation || existingDocs.docGraduation) && percentageGraduation.trim() && (
-                  <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                    ✓ Ready
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="percentageGraduation" className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    Graduation Percentage / CGPA
-                  </label>
-                  <input
-                    id="percentageGraduation"
-                    name="percentageGraduation"
-                    type="text"
-                    placeholder="e.g. 8.4 CGPA or 78%"
-                    value={percentageGraduation}
-                    onChange={(e) => setPercentageGraduation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-gray-950 border border-gray-700/80 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1">
-                    Degree / Marksheet (PDF Only)
-                  </label>
-                  <input
-                    id="doc-graduation-upload"
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onChange={e => handleFileSelect(e, setDocGraduation, 'graduation')}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('doc-graduation-upload').click()}
-                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-black transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
-                      docGraduation
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                        : existingDocs.docGraduation
-                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          : 'bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border-teal-500/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span className="text-sm">{docGraduation || existingDocs.docGraduation ? '📄' : '📤'}</span>
-                      <span className="truncate">
-                        {docGraduation ? docGraduation.name : (existingDocs.docGraduation ? 'Uploaded Degree' : 'Upload Degree PDF')}
-                      </span>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
-                      docGraduation || existingDocs.docGraduation ? 'bg-emerald-500 text-white' : 'bg-teal-500 text-white'
-                    }`}>
-                      {docGraduation ? 'PDF Attached' : (existingDocs.docGraduation ? 'Uploaded' : 'Select PDF')}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ─── Resume Upload (Optional) ─── */}
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
-                Resume (PDF Only) (Optional)
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="resume-upload"
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  onChange={e => handleFileSelect(e, setDocResume, 'resume')}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('resume-upload').click()}
-                  className={`px-5 py-2 rounded-xl text-xs font-black transition-all active:scale-95 border cursor-pointer ${
-                    docResume
-                      ? 'bg-green-600 border-green-500/30 text-white'
-                      : hasUploadedResume || existingDocs.docResume
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-500/30 text-white shadow-md'
-                        : 'bg-emerald-600 hover:bg-emerald-700 border-emerald-500/20 text-white'
-                  }`}
-                >
-                  {docResume
-                    ? 'File Selected'
-                    : hasUploadedResume || existingDocs.docResume
-                      ? 'Update File'
-                      : 'Choose File'}
-                </button>
-                <span className="text-xs text-gray-400 font-semibold truncate max-w-xs">
-                  {docResume ? docResume.name : (hasUploadedResume || existingDocs.docResume ? 'Resume already uploaded' : 'No file chosen')}
-                </span>
-              </div>
-            </div>
-
-            {/* ─── Mobile Number (Required) ─── */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
-                  Mobile Number <span className="text-red-400 font-extrabold">* (Required)</span>
-                </label>
-                {mobile && mobile.replace(/\D/g, '').length === 10 && (
-                  <span className="text-[10px] font-extrabold text-emerald-400 flex items-center gap-1">
-                    ✓ Valid 10-Digits
-                  </span>
-                )}
-              </div>
-              <PhoneInput
-                value={mobile}
-                onChange={(val) => {
-                  setMobile(val);
-                  if (formError && val.replace(/\D/g, '').length === 10) setFormError('');
-                }}
-                countryCode={countryCode}
-                onCountryCodeChange={(code) => setCountryCode(code)}
-                placeholder="Enter 10-digit mobile number"
-              />
-              <p className="text-[10px] text-gray-400 mt-1 font-medium">
-                Mandatory for interview calls, placement updates, and OTP account security.
-              </p>
-            </div>
-
-            {/* Visible form error */}
-            {formError && (
-              <div className="bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold px-4 py-3 rounded-xl flex items-start gap-2 animate-shake">
-                <span className="text-base leading-none">⚠️</span>
-                <span>{formError}</span>
-              </div>
-            )}
-
-            {/* ─── Submit Credentials Button ─── */}
-            <button
-              id="save-profile-button"
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full mt-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white font-black py-4 rounded-xl shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider text-xs"
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  Saving Credentials...
-                </>
-              ) : (
-                <>
-                  <span>🚀</span> Save Profile & Submit Credentials
-                </>
-              )}
-            </button>
-            <p className="text-center text-[10px] text-gray-400 mt-1">
-              Permanent Free Access • No hidden charges • Direct Corporate Placement Access
-            </p>
-          </form>
         </div>
 
-        {/* ── Active Verified Job Openings (Bottom Side - Collapsible) ── */}
-        {remainingJobs.length > 0 && (
-          <div className="max-w-lg w-full mx-auto mt-6 mb-8 z-10 animate-fade-in-up">
-            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] text-left transition-all">
-              <button
-                type="button"
-                onClick={() => setIsBottomJobsExpanded((prev) => !prev)}
-                className="w-full flex items-center justify-between cursor-pointer group text-left focus:outline-none"
-                aria-expanded={isBottomJobsExpanded}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xl shadow-sm group-hover:scale-105 transition-transform">
-                    💼
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-black text-white tracking-tight group-hover:text-emerald-300 transition-colors">
-                        Active Job Openings
-                      </h3>
-                      <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                        {isBottomJobsExpanded ? 'Click to collapse' : 'Click to show more'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-gray-300 font-medium">
-                      {isBottomJobsExpanded
-                        ? 'Complete student profile credentials above to apply directly'
-                        : `${remainingJobs.length} more verified opening${remainingJobs.length === 1 ? '' : 's'} available`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    +{remainingJobs.length} More
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 group-hover:text-white transition-transform duration-300 ${
-                      isBottomJobsExpanded ? 'rotate-180' : ''
-                    }`}
-                  />
-                </div>
-              </button>
+        {/* ── Main Content Area (Light - matching StudentDashboard & ResumeReview) ── */}
+        <main className="relative z-20 -mt-10 bg-gradient-to-br from-slate-50 to-blue-50 rounded-t-[2.5rem] pt-8 pb-20 px-4 md:px-8 w-full flex-1 flex flex-col items-center select-none text-left">
+          <div className="w-full max-w-xl mx-auto space-y-6">
 
-              {isBottomJobsExpanded && (
-                <div className="mt-4 pt-4 border-t border-white/10 space-y-3.5 animate-fade-in">
-                  {remainingJobs.map((job) => (
+            {/* ── Top Verified Job Openings Preview ── */}
+            {topJobs.length > 0 && (
+              <div className="bg-white/90 backdrop-blur-md border border-emerald-200/80 rounded-3xl p-5 sm:p-6 text-left shadow-[0_10px_30px_rgba(16,185,129,0.06)] animate-fade-in">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl shadow-xs">
+                      💼
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                        Verified Job Openings
+                      </h4>
+                      <p className="text-[10px] text-gray-500 font-medium">
+                        Complete your profile credentials below to apply directly
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {topJobs.length} {topJobs.length === 1 ? 'Role' : 'Roles'}
+                  </span>
+                </div>
+
+                {/* Job Cards */}
+                <div className="space-y-3">
+                  {topJobs.map((job) => (
                     <div
                       key={job._id || job.id}
-                      className="bg-black/25 hover:bg-black/45 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 text-left group"
+                      className="bg-slate-50/70 hover:bg-emerald-50/30 border border-slate-200/80 hover:border-emerald-300 rounded-2xl p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left shadow-xs"
                     >
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wide truncate">
                             {job.company}
                           </span>
-                          <span className="text-[9px] font-bold text-gray-300 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                          <span className="text-[9px] font-bold text-gray-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
                             {job.jobType || 'Full-Time'}
                           </span>
                         </div>
-                        <h4 className="text-xs sm:text-sm font-black text-white group-hover:text-emerald-300 transition-colors">
+                        <h5 className="text-xs sm:text-sm font-black text-gray-900 truncate">
                           {job.title}
-                        </h4>
-                        {job.description && (
-                          <p className="text-[10px] text-gray-300 line-clamp-2 mt-1 leading-relaxed">
-                            {job.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-400 font-medium">
+                        </h5>
+                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-500 font-mono">
                           <span>📍 {job.location || 'Remote'}</span>
-                          <span>💰 {job.salary || 'Best in Industry'}</span>
+                          <span>•</span>
+                          <span>💰 {job.salary || 'Competitive'}</span>
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-white/10 flex items-center justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyClick(job)}
-                          className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <span>Apply</span>
-                          <span className="text-[10px]">📝</span>
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyClick(job)}
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-[11px] uppercase tracking-wider px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer shrink-0 text-center flex items-center justify-center gap-1.5"
+                      >
+                        <span>Apply</span>
+                        <span className="text-[10px]">📝</span>
+                      </button>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
 
-                  <div className="mt-4 pt-3 border-t border-white/10 text-center">
-                    <p className="text-[10px] text-gray-400 font-medium">
-                      Corporate partner openings require completed student credentials to apply.
-                    </p>
+            {/* ── Main Form Card ── */}
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-[0_10px_30px_rgba(0,0,0,0.04)]">
+              <form onSubmit={handleSubmitProfile} className="space-y-4">
+                {/* ─── 10th Qualification Card ─── */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-amber-700 tracking-wider flex items-center gap-1.5">
+                      🎓 10th Standard Qualification
+                    </span>
+                    {(docGrade10 || existingDocs.docGrade10) && percentage10th.trim() && (
+                      <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        ✓ Ready
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="percentage10th" className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        10th Percentage (%)
+                      </label>
+                      <input
+                        id="percentage10th"
+                        name="percentage10th"
+                        type="text"
+                        placeholder="e.g. 85.5%"
+                        value={percentage10th}
+                        onChange={(e) => setPercentage10th(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-semibold shadow-xs transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        10th Marksheet (PDF Only)
+                      </label>
+                      <input
+                        id="doc-10th-upload"
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={e => handleFileSelect(e, setDocGrade10, '10th')}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('doc-10th-upload').click()}
+                        className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
+                          docGrade10
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-xs'
+                            : existingDocs.docGrade10
+                              ? 'bg-emerald-50/60 text-emerald-800 border-emerald-200'
+                              : 'bg-white hover:bg-amber-50/40 text-gray-700 border-slate-200 hover:border-amber-400 shadow-xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="text-sm">{docGrade10 || existingDocs.docGrade10 ? '📄' : '📤'}</span>
+                          <span className="truncate">
+                            {docGrade10 ? docGrade10.name : (existingDocs.docGrade10 ? 'Uploaded Marksheet' : 'Upload 10th PDF')}
+                          </span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
+                          docGrade10 || existingDocs.docGrade10 ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'
+                        }`}>
+                          {docGrade10 ? 'PDF Attached' : (existingDocs.docGrade10 ? 'Uploaded' : 'Select PDF')}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* ─── 12th Qualification Card ─── */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-indigo-700 tracking-wider flex items-center gap-1.5">
+                      🎓 12th Standard Qualification
+                    </span>
+                    {(docGrade12 || existingDocs.docGrade12) && percentage12th.trim() && (
+                      <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        ✓ Ready
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="percentage12th" className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        12th Percentage (%)
+                      </label>
+                      <input
+                        id="percentage12th"
+                        name="percentage12th"
+                        type="text"
+                        placeholder="e.g. 88.0%"
+                        value={percentage12th}
+                        onChange={(e) => setPercentage12th(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-semibold shadow-xs transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        12th Marksheet (PDF Only)
+                      </label>
+                      <input
+                        id="doc-12th-upload"
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={e => handleFileSelect(e, setDocGrade12, '12th')}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('doc-12th-upload').click()}
+                        className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
+                          docGrade12
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-xs'
+                            : existingDocs.docGrade12
+                              ? 'bg-emerald-50/60 text-emerald-800 border-emerald-200'
+                              : 'bg-white hover:bg-indigo-50/40 text-gray-700 border-slate-200 hover:border-indigo-400 shadow-xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="text-sm">{docGrade12 || existingDocs.docGrade12 ? '📄' : '📤'}</span>
+                          <span className="truncate">
+                            {docGrade12 ? docGrade12.name : (existingDocs.docGrade12 ? 'Uploaded Marksheet' : 'Upload 12th PDF')}
+                          </span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
+                          docGrade12 || existingDocs.docGrade12 ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'
+                        }`}>
+                          {docGrade12 ? 'PDF Attached' : (existingDocs.docGrade12 ? 'Uploaded' : 'Select PDF')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ─── Graduation Qualification Card ─── */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase text-teal-700 tracking-wider flex items-center gap-1.5">
+                      🎓 Graduation Qualification
+                    </span>
+                    {(docGraduation || existingDocs.docGraduation) && percentageGraduation.trim() && (
+                      <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        ✓ Ready
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="percentageGraduation" className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        Graduation Percentage / CGPA
+                      </label>
+                      <input
+                        id="percentageGraduation"
+                        name="percentageGraduation"
+                        type="text"
+                        placeholder="e.g. 8.4 CGPA or 78%"
+                        value={percentageGraduation}
+                        onChange={(e) => setPercentageGraduation(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 font-semibold shadow-xs transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        Degree / Marksheet (PDF Only)
+                      </label>
+                      <input
+                        id="doc-graduation-upload"
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={e => handleFileSelect(e, setDocGraduation, 'graduation')}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('doc-graduation-upload').click()}
+                        className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 border flex items-center justify-between cursor-pointer ${
+                          docGraduation
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-xs'
+                            : existingDocs.docGraduation
+                              ? 'bg-emerald-50/60 text-emerald-800 border-emerald-200'
+                              : 'bg-white hover:bg-teal-50/40 text-gray-700 border-slate-200 hover:border-teal-400 shadow-xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="text-sm">{docGraduation || existingDocs.docGraduation ? '📄' : '📤'}</span>
+                          <span className="truncate">
+                            {docGraduation ? docGraduation.name : (existingDocs.docGraduation ? 'Uploaded Degree' : 'Upload Degree PDF')}
+                          </span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider font-extrabold shrink-0 ${
+                          docGraduation || existingDocs.docGraduation ? 'bg-emerald-600 text-white' : 'bg-teal-500 text-white'
+                        }`}>
+                          {docGraduation ? 'PDF Attached' : (existingDocs.docGraduation ? 'Uploaded' : 'Select PDF')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ─── Resume Upload (Optional) ─── */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2 shadow-xs">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    Resume (PDF Only) (Optional)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="resume-upload"
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      onChange={e => handleFileSelect(e, setDocResume, 'resume')}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('resume-upload').click()}
+                      className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all active:scale-95 border cursor-pointer ${
+                        docResume
+                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                          : hasUploadedResume || existingDocs.docResume
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-500/30 text-white shadow-xs'
+                            : 'bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white shadow-xs'
+                      }`}
+                    >
+                      {docResume
+                        ? 'File Selected'
+                        : hasUploadedResume || existingDocs.docResume
+                          ? 'Update File'
+                          : 'Choose File'}
+                    </button>
+                    <span className="text-xs text-gray-500 font-semibold truncate max-w-xs">
+                      {docResume ? docResume.name : (hasUploadedResume || existingDocs.docResume ? 'Resume already uploaded' : 'No file chosen')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ─── Mobile Number (Required) ─── */}
+                <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-1.5 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Mobile Number <span className="text-red-500 font-extrabold">* (Required)</span>
+                    </label>
+                    {mobile && mobile.replace(/\D/g, '').length === 10 && (
+                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        ✓ Valid 10-Digits
+                      </span>
+                    )}
+                  </div>
+                  <PhoneInput
+                    value={mobile}
+                    onChange={(val) => {
+                      setMobile(val);
+                      if (formError && val.replace(/\D/g, '').length === 10) setFormError('');
+                    }}
+                    countryCode={countryCode}
+                    onCountryCodeChange={(code) => setCountryCode(code)}
+                    placeholder="Enter 10-digit mobile number"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1 font-medium">
+                    Mandatory for interview calls, placement updates, and OTP account security.
+                  </p>
+                </div>
+
+                {/* Visible form error */}
+                {formError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold px-4 py-3 rounded-xl flex items-start gap-2 animate-shake shadow-xs">
+                    <span className="text-base leading-none">⚠️</span>
+                    <span>{formError}</span>
+                  </div>
+                )}
+
+                {/* ─── Submit Credentials Button ─── */}
+                <button
+                  id="save-profile-button"
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full mt-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white font-black py-4 rounded-2xl shadow-[0_10px_25px_rgba(16,185,129,0.3)] hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider text-xs sm:text-sm"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                      Saving Credentials...
+                    </>
+                  ) : (
+                    <>
+                      <span>🚀</span> Save Profile & Submit Credentials
+                    </>
+                  )}
+                </button>
+                <p className="text-center text-[10px] text-gray-500 mt-1 font-medium">
+                  Permanent Free Access • No hidden charges • Direct Corporate Placement Access
+                </p>
+              </form>
             </div>
+
+            {/* ── Active Verified Job Openings (Bottom Side - Collapsible) ── */}
+            {remainingJobs.length > 0 && (
+              <div className="w-full animate-fade-in-up">
+                <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.04)] text-left transition-all">
+                  <button
+                    type="button"
+                    onClick={() => setIsBottomJobsExpanded((prev) => !prev)}
+                    className="w-full flex items-center justify-between cursor-pointer group text-left focus:outline-none"
+                    aria-expanded={isBottomJobsExpanded}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl shadow-xs group-hover:scale-105 transition-transform">
+                        💼
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-gray-900 tracking-tight group-hover:text-emerald-700 transition-colors">
+                            Active Job Openings
+                          </h3>
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                            {isBottomJobsExpanded ? 'Click to collapse' : 'Click to show more'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-medium">
+                          {isBottomJobsExpanded
+                            ? 'Complete student profile credentials above to apply directly'
+                            : `${remainingJobs.length} more verified opening${remainingJobs.length === 1 ? '' : 's'} available`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        +{remainingJobs.length} More
+                      </span>
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 group-hover:text-gray-700 transition-transform duration-300 ${
+                          isBottomJobsExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+                  </button>
+
+                  {isBottomJobsExpanded && (
+                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-3.5 animate-fade-in">
+                      {remainingJobs.map((job) => (
+                        <div
+                          key={job._id || job.id}
+                          className="bg-slate-50/70 hover:bg-emerald-50/20 border border-slate-200/80 hover:border-emerald-300 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 text-left group shadow-xs"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">
+                                {job.company}
+                              </span>
+                              <span className="text-[9px] font-bold text-gray-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                                {job.jobType || 'Full-Time'}
+                              </span>
+                            </div>
+                            <h4 className="text-xs sm:text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors">
+                              {job.title}
+                            </h4>
+                            {job.description && (
+                              <p className="text-[10px] text-gray-600 line-clamp-2 mt-1 leading-relaxed">
+                                {job.description}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-3 mt-2 text-[10px] text-gray-500 font-medium">
+                              <span>📍 {job.location || 'Remote'}</span>
+                              <span>💰 {job.salary || 'Best in Industry'}</span>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleApplyClick(job)}
+                              className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              <span>Apply</span>
+                              <span className="text-[10px]">📝</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+                        <p className="text-[10px] text-gray-400 font-medium">
+                          Corporate partner openings require completed student credentials to apply.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </main>
       </div>
     </PullToRefreshWrapper>
   );
