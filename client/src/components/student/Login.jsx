@@ -292,6 +292,8 @@ function Login() {
     });
   };
 
+  const handleGoogleModalSubmit = handleManualGoogleAuth;
+
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     if (isOtpLoading) return;
