@@ -4,23 +4,13 @@ const SystemSettings = require('../models/SystemSettings');
  * Helper to inspect all potential Groq environment variables
  */
 function getEnvGroqKey(preferredType = 'chat') {
-  if (preferredType === 'chat') {
-    return (
-      process.env.GROQ_API_KEY ||
-      process.env.GROQ_CHAT_API_KEY ||
-      process.env.VITE_GROQ_API_KEY ||
-      process.env.AI_CHAT_API_KEY ||
-      process.env.AI_RESUME_API_KEY ||
-      process.env.GROQ_KEY ||
-      ''
-    ).trim();
-  }
   return (
     process.env.GROQ_API_KEY ||
+    process.env.GROQ_CHAT_API_KEY ||
     process.env.AI_RESUME_API_KEY ||
     process.env.GROQ_RESUME_API_KEY ||
-    process.env.GROQ_CHAT_API_KEY ||
     process.env.VITE_GROQ_API_KEY ||
+    process.env.AI_CHAT_API_KEY ||
     process.env.GROQ_KEY ||
     ''
   ).trim();
@@ -49,15 +39,19 @@ async function getGroqChatApiKey() {
 /**
  * getGroqResumeApiKey — fetches active Groq API Key for Resume ATS Review
  * 1. Checks MongoDB SystemSettings for resumeGroqKey or activeGroqResumeApiKey.
- * 2. If empty, falls back to environment variables (including GROQ_API_KEY, AI_RESUME_API_KEY, etc.).
+ * 2. If empty, falls back to custom chatGroqKey, then environment variables.
  */
 async function getGroqResumeApiKey() {
   try {
     const settings = await SystemSettings.findOne({ key: 'global_settings' });
     if (settings) {
-      const customKey = settings.resumeGroqKey || settings.activeGroqResumeApiKey;
-      if (customKey && typeof customKey === 'string' && customKey.trim()) {
-        return customKey.trim();
+      const customResumeKey = settings.resumeGroqKey || settings.activeGroqResumeApiKey;
+      if (customResumeKey && typeof customResumeKey === 'string' && customResumeKey.trim()) {
+        return customResumeKey.trim();
+      }
+      const customChatKey = settings.chatGroqKey || settings.activeGroqChatApiKey;
+      if (customChatKey && typeof customChatKey === 'string' && customChatKey.trim()) {
+        return customChatKey.trim();
       }
     }
   } catch (err) {

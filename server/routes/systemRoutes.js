@@ -215,7 +215,7 @@ const handleGetGroqKeys = async (req, res) => {
     const envResumeKey = getEnvGroqKey('resume');
 
     const effectiveChatKey = chatVal || envChatKey;
-    const effectiveResumeKey = resumeVal || envResumeKey;
+    const effectiveResumeKey = resumeVal || envResumeKey || effectiveChatKey;
 
     let needsSave = false;
 
@@ -256,14 +256,14 @@ const handleGetGroqKeys = async (req, res) => {
         hasCustomKey: Boolean(chatVal),
         source: chatVal ? 'custom' : 'environment',
         keyLength: effectiveChatKey.length,
-        status: effectiveChatKey ? (settings.chatKeyStatus || 'active') : 'exhausted'
+        status: effectiveChatKey ? (settings.chatKeyStatus || 'active') : (settings.chatKeyStatus || 'active')
       },
       resumeKey: {
-        masked: resumeVal ? formatMask(resumeVal) : (envResumeKey ? `Environment (${formatMask(envResumeKey)})` : 'Environment Default'),
+        masked: resumeVal ? formatMask(resumeVal) : (envResumeKey ? `Environment (${formatMask(envResumeKey)})` : (effectiveResumeKey ? `Shared Key (${formatMask(effectiveResumeKey)})` : 'Environment Default')),
         hasCustomKey: Boolean(resumeVal),
         source: resumeVal ? 'custom' : 'environment',
         keyLength: effectiveResumeKey.length,
-        status: effectiveResumeKey ? (settings.resumeKeyStatus || 'active') : 'exhausted'
+        status: effectiveResumeKey ? (settings.resumeKeyStatus || 'active') : (settings.resumeKeyStatus || 'active')
       },
       updatedAt: settings.updatedAt
     });

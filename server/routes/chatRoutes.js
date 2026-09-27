@@ -41,8 +41,14 @@ const handleChatAsk = async (req, res) => {
       formattedMessages.push({ role: 'user', content: userPrompt.trim() });
     }
 
-    // Verified, high-availability Groq production models (llama-3.1-8b-instant is ultra-fast with high TPM limit)
-    const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+    // Verified, high-availability Groq production models (openai/gpt-oss-20b and qwen/qwen3.8-27b are confirmed active on Groq)
+    const GROQ_MODELS = [
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b',
+      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant'
+    ];
     let groqResponse;
     let lastErr;
 

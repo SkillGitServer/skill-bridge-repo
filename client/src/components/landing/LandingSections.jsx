@@ -887,7 +887,7 @@ export default function LandingSections({ contentOverride, isEditing, onFieldCha
               <h4 className="font-bold text-sm tracking-wide text-white">Bridge AI</h4>
               <p className="text-[10px] text-white/70 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                Online · Llama 3.1
+                Online · Active
               </p>
             </div>
           </div>

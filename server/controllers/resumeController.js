@@ -67,7 +67,13 @@ const analyzeResumeAi = async (req, res) => {
     }
 
     // Request Groq Chat Completion with resilient model fallback
-    const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+    const GROQ_MODELS = [
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.8-27b',
+      'openai/gpt-oss-120b',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant'
+    ];
     let groqResponse;
     let lastErr;
 
@@ -199,7 +205,7 @@ const analyzeStudentResumeByAdmin = async (req, res) => {
     const groqResponse = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
-        model: 'llama-3.1-8b-instant',
+        model: 'openai/gpt-oss-20b',
         messages: [
           {
             role: 'system',
