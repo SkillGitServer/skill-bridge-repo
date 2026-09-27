@@ -1120,8 +1120,8 @@ router.get('/api/super-admin/admins', verifyToken, requireRole('superadmin'), as
   }
 });
 
-// POST /api/super-admin/approve-admin/:id — approves a pending admin and assigns a referral code
-router.post('/api/super-admin/approve-admin/:id', verifyToken, requireRole('superadmin'), async (req, res) => {
+// PUT & POST /api/super-admin/approve-admin/:id — approves a pending admin and assigns a referral code
+const handleApproveAdmin = async (req, res) => {
   try {
     const admin = await Admin.findById(req.params.id);
     if (!admin) {
@@ -1131,6 +1131,14 @@ router.post('/api/super-admin/approve-admin/:id', verifyToken, requireRole('supe
     admin.status = 'active';
     if (!admin.referralCode || admin.referralCode === 'CB-ADMIN-001' || admin.referralCode === 'REF-CB2025') {
       admin.referralCode = await generateUniqueAdminReferralCode();
+    }
+
+    if (admin.referralCode && (!admin.referralKeysHistory || admin.referralKeysHistory.length === 0)) {
+      admin.referralKeysHistory = [{
+        code: admin.referralCode,
+        status: 'Active',
+        createdAt: new Date()
+      }];
     }
     await admin.save();
 
@@ -1164,7 +1172,67 @@ router.post('/api/super-admin/approve-admin/:id', verifyToken, requireRole('supe
     console.error('[APPROVE ADMIN ERROR]', err);
     res.status(500).json({ error: 'Failed to approve admin.' });
   }
-});
+};
+
+router.put('/api/super-admin/approve-admin/:id', verifyToken, requireRole('superadmin'), handleApproveAdmin);
+router.post('/api/super-admin/approve-admin/:id', verifyToken, requireRole('superadmin'), handleApproveAdmin);
+
+// DELETE & POST /api/super-admin/reject-admin/:id — rejects and removes a pending admin request
+const handleRejectAdmin = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin request not found.' });
+    }
+
+    const adminName = admin.name || 'Mentor Admin';
+    const adminEmail = admin.email;
+    const adminCity = admin.city || '';
+    const adminState = admin.state || '';
+
+    // Safely unlink any assigned students
+    await Student.updateMany(
+      { assignedAdminId: admin._id },
+      { $set: { assignedAdminId: null, adminReferralCode: '' } }
+    );
+
+    // Delete the pending admin registration
+    await Admin.findByIdAndDelete(req.params.id);
+
+    // Log Activity for Super Admin Recent Platform Activity feed (Admin Rejected)
+    try {
+      const ActivityLog = require('../models/ActivityLog');
+      await ActivityLog.create({
+        ownerId: null,
+        ownerRole: 'SuperAdmin',
+        sender: {
+          name: req.user?.name || 'Super Admin',
+          email: req.user?.email || 'system@skillbridge.in'
+        },
+        recipient: {
+          name: adminName,
+          email: adminEmail || ''
+        },
+        type: 'ADMIN_REJECTED',
+        message: `Super Admin rejected Admin/Mentor application for ${adminName} (${adminEmail}) from ${adminCity}, ${adminState}.`,
+        timestamp: new Date()
+      });
+    } catch (logErr) {
+      console.error('Failed to log ADMIN_REJECTED ActivityLog:', logErr);
+    }
+
+    const { recalculateSystemMetrics } = require('../utils/systemMetrics');
+    await recalculateSystemMetrics().catch(err => console.error('Failed to update metrics on reject admin:', err));
+
+    res.json({ message: `Rejected registration for ${adminEmail}` });
+  } catch (err) {
+    console.error('[REJECT ADMIN ERROR]', err);
+    res.status(500).json({ error: 'Failed to reject admin request.' });
+  }
+};
+
+router.delete('/api/super-admin/reject-admin/:id', verifyToken, requireRole('superadmin'), handleRejectAdmin);
+router.post('/api/super-admin/reject-admin/:id', verifyToken, requireRole('superadmin'), handleRejectAdmin);
 
 // POST /api/super-admin/revoke-admin/:id — revokes admin access and unlinks assigned students while preserving lastAssignedAdminId
 router.post('/api/super-admin/revoke-admin/:id', verifyToken, requireRole('superadmin'), async (req, res) => {

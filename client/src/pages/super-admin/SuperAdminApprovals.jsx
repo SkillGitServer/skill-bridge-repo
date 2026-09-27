@@ -39,14 +39,14 @@ function SuperAdminApprovals() {
   const handleApproveAdmin = async (id, email) => {
     try {
       const token = getAuthToken('supss');
-      await axios.put(`/api/super-admin/approve-admin/${id}`, {}, {
+      const res = await axios.put(`/api/super-admin/approve-admin/${id}`, {}, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      toast.success(`Approved administrator access for ${email}`);
+      toast.success(res.data?.message || `Approved administrator access for ${email}`);
       fetchPendingAdmins();
     } catch (err) {
       console.error('Approve failed:', err);
-      toast.error(err.response?.data?.error || 'Failed to approve admin.');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to approve admin.');
     }
   };
 
@@ -58,14 +58,16 @@ function SuperAdminApprovals() {
       const res = await axios.delete(`/api/super-admin/reject-admin/${id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      toast.success(res.data.message || `Rejected registration for ${email}`);
+      toast.success(res.data?.message || `Rejected registration for ${email}`);
       setConfirmRejectModal(null);
       fetchPendingAdmins();
     } catch (err) {
       console.error('Reject failed:', err);
-      toast.error(err.response?.data?.error || 'Failed to reject admin request.');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to reject admin request.');
     }
   };
+
+  const executeRejectAdmin = handleRejectAdmin;
 
   const handleLogout = () => {
     logoutUser('superadmin', navigate);
