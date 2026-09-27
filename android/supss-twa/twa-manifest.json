@@ -1,6 +1,6 @@
 {
   "packageId": "cd.bot.skillbridge.superadmin",
-  "host": "skill-bridge-india.bot.cd",
+  "host": "official-skill-bridge-india.netlify.app",
   "name": "Supss",
   "launcherName": "Supss",
   "display": "standalone",
@@ -13,8 +13,8 @@
   "backgroundColor": "#FFFFFF",
   "enableNotifications": true,
   "startUrl": "/sudo-control-panel",
-  "iconUrl": "https://skill-bridge-india.bot.cd/sup-icon.png",
-  "maskableIconUrl": "https://skill-bridge-india.bot.cd/sup-icon.png",
+  "iconUrl": "https://official-skill-bridge-india.netlify.app/sup-icon.png",
+  "maskableIconUrl": "https://official-skill-bridge-india.netlify.app/sup-icon.png",
   "signingKey": {
     "path": "./android.keystore",
     "alias": "android"
@@ -23,7 +23,7 @@
   "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://skill-bridge-india.bot.cd/manifest-superadmin.json",
+  "webManifestUrl": "https://official-skill-bridge-india.netlify.app/manifest-superadmin.json",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {

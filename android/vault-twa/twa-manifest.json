@@ -1,6 +1,6 @@
 {
   "packageId": "cd.bot.skillbridge.admin",
-  "host": "skill-bridge-india.bot.cd",
+  "host": "official-skill-bridge-india.netlify.app",
   "name": "Vault",
   "launcherName": "Vault",
   "display": "standalone",
@@ -13,8 +13,8 @@
   "backgroundColor": "#FFFFFF",
   "enableNotifications": true,
   "startUrl": "/admin/auth?access=admin_launch_2026&pwa=admin",
-  "iconUrl": "https://skill-bridge-india.bot.cd/adm-icon.png",
-  "maskableIconUrl": "https://skill-bridge-india.bot.cd/adm-icon.png",
+  "iconUrl": "https://official-skill-bridge-india.netlify.app/adm-icon.png",
+  "maskableIconUrl": "https://official-skill-bridge-india.netlify.app/adm-icon.png",
   "signingKey": {
     "path": "./android.keystore",
     "alias": "android"
@@ -23,7 +23,7 @@
   "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://skill-bridge-india.bot.cd/manifest-admin.json",
+  "webManifestUrl": "https://official-skill-bridge-india.netlify.app/manifest-admin.json",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
