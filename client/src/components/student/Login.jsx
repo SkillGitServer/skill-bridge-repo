@@ -229,11 +229,15 @@ function Login() {
         const tokenClient = window.google.accounts.oauth2.initTokenClient({
           client_id: configuredClientId,
           scope: 'email profile openid',
+          error_callback: (err) => {
+            console.warn('[GIS LAUNCH ERROR]', err);
+            setShowGoogleModal(true);
+          },
           callback: (tokenRes) => {
             if (tokenRes.access_token) {
               handleGoogleBackendAuth({ access_token: tokenRes.access_token });
             } else if (tokenRes.error) {
-              toast.error('Google authentication popup closed.');
+              setShowGoogleModal(true);
             }
           }
         });
@@ -489,6 +493,16 @@ function Login() {
                     </span>
                   </button>
 
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowGoogleModal(true)}
+                      className="text-[11px] text-gray-400 hover:text-black font-semibold underline cursor-pointer transition-colors"
+                    >
+                      Trouble signing in with Google popup? Tap here
+                    </button>
+                  </div>
+
                   {/* Collapsed OTP Form: Shown only when requested */}
                   {showOtpForm && (
                     <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -590,6 +604,22 @@ function Login() {
                       {isGoogleLoading ? 'Connecting to Google...' : 'Fast Register with Google'}
                     </span>
                   </button>
+
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!termsAccepted) {
+                          toast.error('Please accept the Terms and Conditions first.');
+                          return;
+                        }
+                        setShowGoogleModal(true);
+                      }}
+                      className="text-[11px] text-gray-400 hover:text-black font-semibold underline cursor-pointer transition-colors"
+                    >
+                      Trouble registering with Google popup? Tap here
+                    </button>
+                  </div>
 
                   {/* Collapsed Registration Form: Shown only when requested */}
                   {showOtpForm && (
