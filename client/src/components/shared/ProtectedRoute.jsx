@@ -35,12 +35,22 @@ const ProtectedRoute = ({ allowedRoles }) => {
             if (!res.data.isUnlocked) {
               const expiresAt = new Date(res.data.trialExpiresAt).getTime();
               if (expiresAt <= Date.now()) {
-                if (
-                  location.pathname !== '/student/dashboard' &&
-                  location.pathname !== '/student_dashboard' &&
-                  location.pathname !== '/student/jobs' &&
-                  !location.pathname.startsWith('/student/exam')
-                ) {
+                const allowedStudentPaths = [
+                  '/student/dashboard',
+                  '/student_dashboard',
+                  '/student/resume',
+                  '/student/jobs',
+                  '/student/profile',
+                  '/student/results',
+                  '/student/leaderboard',
+                  '/student/complete-profile',
+                  '/student/upgrade'
+                ];
+                const isAllowed =
+                  allowedStudentPaths.includes(location.pathname) ||
+                  location.pathname.startsWith('/student/exam');
+
+                if (!isAllowed) {
                   window.location.href = '/student/dashboard';
                 }
               }
