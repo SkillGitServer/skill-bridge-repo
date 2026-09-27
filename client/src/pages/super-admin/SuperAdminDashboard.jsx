@@ -168,6 +168,22 @@ function SuperAdminDashboard() {
     }
   };
 
+  const handleReactivateKey = async (targetKey) => {
+    try {
+      const token = getAuthToken('supss');
+      const res = await axios.post(
+        '/api/super-admin/settings/groq-keys',
+        { targetKey, action: 'reactivate' },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      toast.success(res.data?.message || 'Key reactivated successfully!');
+      fetchGroqKeySettings();
+    } catch (err) {
+      console.error('Failed to reactivate key:', err);
+      toast.error(err.response?.data?.error || 'Failed to reactivate key.');
+    }
+  };
+
   // Retention & Auto-Delete Settings (1d, 3d, 7d, 30d, never)
   const [retentionSettings, setRetentionSettings] = useState({
     uploadLogsRetention: '7d',
@@ -1577,6 +1593,17 @@ function SuperAdminDashboard() {
                     Reset
                   </button>
                 )}
+                {(groqKeysInfo?.chatKey?.status === 'exhausted' || groqKeysInfo?.chatbot?.status === 'exhausted') && (
+                  <button
+                    type="button"
+                    onClick={() => handleReactivateKey('chat')}
+                    disabled={isSavingChatKey}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                    title="Mark key active and clear exhausted status"
+                  >
+                    Reactivate
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -1672,6 +1699,17 @@ function SuperAdminDashboard() {
                     className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer border border-gray-200"
                   >
                     Reset
+                  </button>
+                )}
+                {(groqKeysInfo?.resumeKey?.status === 'exhausted' || groqKeysInfo?.ats?.status === 'exhausted') && (
+                  <button
+                    type="button"
+                    onClick={() => handleReactivateKey('resume')}
+                    disabled={isSavingResumeKey}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                    title="Mark key active and clear exhausted status"
+                  >
+                    Reactivate
                   </button>
                 )}
               </div>

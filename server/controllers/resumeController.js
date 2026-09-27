@@ -67,7 +67,7 @@ const analyzeResumeAi = async (req, res) => {
     }
 
     // Request Groq Chat Completion with resilient model fallback
-    const GROQ_MODELS = ['groq/compound-mini', 'groq/compound', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
     let groqResponse;
     let lastErr;
 
@@ -102,7 +102,8 @@ Respond ONLY with the raw JSON object, without markdown blocks.`
             headers: {
               'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json'
-            }
+            },
+            timeout: 25000
           }
         );
         if (groqResponse && groqResponse.data?.choices?.[0]?.message) {
@@ -111,7 +112,7 @@ Respond ONLY with the raw JSON object, without markdown blocks.`
       } catch (mErr) {
         lastErr = mErr;
         const errStatus = mErr.response?.status;
-        if (errStatus === 401 || errStatus === 403 || errStatus === 429) {
+        if (errStatus === 401) {
           throw mErr;
         }
       }
@@ -148,7 +149,11 @@ Respond ONLY with the raw JSON object, without markdown blocks.`
   } catch (err) {
     const status = err.response?.status;
     const errMsg = (err.response?.data?.error?.message || err.message || '').toLowerCase();
-    if (status === 429 || status === 401 || status === 403 || errMsg.includes('rate limit') || errMsg.includes('quota') || errMsg.includes('invalid api key') || errMsg.includes('exceeded')) {
+    const errCode = (err.response?.data?.error?.code || '').toLowerCase();
+    const isAuthFailure = status === 401 || errMsg.includes('invalid api key') || errCode === 'invalid_api_key';
+    const isHardQuotaExhausted = (status === 429 && (errMsg.includes('quota') || errMsg.includes('insufficient_quota') || errCode === 'insufficient_quota'));
+
+    if (isAuthFailure || isHardQuotaExhausted) {
       updateResumeKeyStatus('exhausted');
     }
     console.error('AI Resume analysis error:', err);

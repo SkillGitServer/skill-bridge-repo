@@ -203,11 +203,44 @@ const handlePostRetentionSettings = async (req, res) => {
 };
 
 // --- Groq Keys Endpoints ---
+const { getEnvGroqKey } = require('../utils/getGroqApiKey');
+
 const handleGetGroqKeys = async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
     const chatVal = (settings.chatGroqKey || settings.activeGroqChatApiKey || '').trim();
     const resumeVal = (settings.resumeGroqKey || settings.activeGroqResumeApiKey || '').trim();
+
+    const envChatKey = getEnvGroqKey('chat');
+    const envResumeKey = getEnvGroqKey('resume');
+
+    const effectiveChatKey = chatVal || envChatKey;
+    const effectiveResumeKey = resumeVal || envResumeKey;
+
+    let needsSave = false;
+
+    // If chat key was marked exhausted, but key is present and has changed from the exhausted key:
+    if (settings.chatKeyStatus === 'exhausted') {
+      if (settings.chatKeyExhaustedKey && settings.chatKeyExhaustedKey !== effectiveChatKey) {
+        settings.chatKeyStatus = 'active';
+        settings.chatKeyExhaustedKey = null;
+        settings.chatKeyFailureCount = 0;
+        needsSave = true;
+      }
+    }
+
+    if (settings.resumeKeyStatus === 'exhausted') {
+      if (settings.resumeKeyExhaustedKey && settings.resumeKeyExhaustedKey !== effectiveResumeKey) {
+        settings.resumeKeyStatus = 'active';
+        settings.resumeKeyExhaustedKey = null;
+        settings.resumeKeyFailureCount = 0;
+        needsSave = true;
+      }
+    }
+
+    if (needsSave) {
+      await settings.save();
+    }
 
     const formatMask = (val) => {
       if (!val) return 'Environment Default';
@@ -219,18 +252,18 @@ const handleGetGroqKeys = async (req, res) => {
 
     return res.status(200).json({
       chatKey: {
-        masked: formatMask(chatVal),
+        masked: chatVal ? formatMask(chatVal) : (envChatKey ? `Environment (${formatMask(envChatKey)})` : 'Environment Default'),
         hasCustomKey: Boolean(chatVal),
         source: chatVal ? 'custom' : 'environment',
-        keyLength: chatVal.length,
-        status: settings.chatKeyStatus || 'active'
+        keyLength: effectiveChatKey.length,
+        status: effectiveChatKey ? (settings.chatKeyStatus || 'active') : 'exhausted'
       },
       resumeKey: {
-        masked: formatMask(resumeVal),
+        masked: resumeVal ? formatMask(resumeVal) : (envResumeKey ? `Environment (${formatMask(envResumeKey)})` : 'Environment Default'),
         hasCustomKey: Boolean(resumeVal),
         source: resumeVal ? 'custom' : 'environment',
-        keyLength: resumeVal.length,
-        status: settings.resumeKeyStatus || 'active'
+        keyLength: effectiveResumeKey.length,
+        status: effectiveResumeKey ? (settings.resumeKeyStatus || 'active') : 'exhausted'
       },
       updatedAt: settings.updatedAt
     });
@@ -246,21 +279,40 @@ const handleGetGroqKeys = async (req, res) => {
 const handlePostGroqKeys = async (req, res) => {
   try {
     const settings = await getOrCreateSettings();
-    const { targetKey, activeGroqApiKey } = req.body;
+    const { targetKey, activeGroqApiKey, action } = req.body;
     const cleanKey = (activeGroqApiKey || '').trim();
+
+    if (action === 'reactivate' || action === 'reactivate-all') {
+      if (targetKey === 'chat' || action === 'reactivate-all') {
+        settings.chatKeyStatus = 'active';
+        settings.chatKeyExhaustedKey = null;
+        settings.chatKeyFailureCount = 0;
+      }
+      if (targetKey === 'resume' || action === 'reactivate-all') {
+        settings.resumeKeyStatus = 'active';
+        settings.resumeKeyExhaustedKey = null;
+        settings.resumeKeyFailureCount = 0;
+      }
+      await settings.save();
+      return res.status(200).json({ success: true, message: 'AI Key reactivated successfully!' });
+    }
 
     if (targetKey === 'chat') {
       settings.chatGroqKey = cleanKey;
       settings.activeGroqChatApiKey = cleanKey;
       settings.chatKeyStatus = 'active';
+      settings.chatKeyExhaustedKey = null;
+      settings.chatKeyFailureCount = 0;
     }
     if (targetKey === 'resume') {
       settings.resumeGroqKey = cleanKey;
       settings.activeGroqResumeApiKey = cleanKey;
       settings.resumeKeyStatus = 'active';
+      settings.resumeKeyExhaustedKey = null;
+      settings.resumeKeyFailureCount = 0;
     }
     await settings.save();
-    return res.status(200).json({ success: true, message: 'Groq AI API Key updated successfully!' });
+    return res.status(200).json({ success: true, message: 'Groq AI API Key updated and activated successfully!' });
   } catch (err) {
     console.error('Error in handlePostGroqKeys:', err);
     return res.status(500).json({ error: 'Failed to update Groq API key.' });

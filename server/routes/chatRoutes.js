@@ -41,7 +41,8 @@ const handleChatAsk = async (req, res) => {
       formattedMessages.push({ role: 'user', content: userPrompt.trim() });
     }
 
-    const GROQ_MODELS = ['groq/compound-mini', 'groq/compound', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+    // Verified, high-availability Groq production models (llama-3.1-8b-instant is ultra-fast with high TPM limit)
+    const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
     let groqResponse;
     let lastErr;
 
@@ -53,13 +54,14 @@ const handleChatAsk = async (req, res) => {
             model: modelCandidate,
             messages: formattedMessages,
             temperature: 0.5,
-            max_tokens: 250
+            max_tokens: 300
           },
           {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
               'Content-Type': 'application/json'
-            }
+            },
+            timeout: 15000
           }
         );
         if (groqResponse && groqResponse.data?.choices?.[0]?.message) {
@@ -68,9 +70,12 @@ const handleChatAsk = async (req, res) => {
       } catch (mErr) {
         lastErr = mErr;
         const errStatus = mErr.response?.status;
-        if (errStatus === 401 || errStatus === 403 || errStatus === 429) {
-          throw mErr; // Auth / Quota error -> stop trying other models
+        console.warn(`[Groq Model ${modelCandidate} failed]:`, mErr.response?.data?.error?.message || mErr.message);
+        // Only break early if API key is invalid (401)
+        if (errStatus === 401) {
+          throw mErr;
         }
+        // If 429 or temporary issue on this specific model, attempt next model candidate!
       }
     }
 
@@ -78,10 +83,17 @@ const handleChatAsk = async (req, res) => {
       throw lastErr;
     }
 
-    const aiReply = groqResponse.data?.choices?.[0]?.message?.content || "I'm having trouble connecting right now, please try again.";
+    const aiReply = groqResponse.data?.choices?.[0]?.message?.content || "I'm here to help with Skill Bridge India courses, assessments, and career guidance. How can I assist you today?";
 
-    // On success, ensure Chatbot status is active
-    SystemSettings.updateOne({ key: 'global_settings' }, { chatKeyStatus: 'active' }).catch(() => {});
+    // On success, ensure Chatbot status is active and clear exhausted records
+    SystemSettings.updateOne(
+      { key: 'global_settings' }, 
+      { 
+        chatKeyStatus: 'active',
+        chatKeyExhaustedKey: null,
+        chatKeyFailureCount: 0
+      }
+    ).catch(() => {});
 
     // Automatically log conversation
     if (sessionId) {
@@ -101,10 +113,21 @@ const handleChatAsk = async (req, res) => {
   } catch (error) {
     const status = error.response?.status;
     const errMsg = (error.response?.data?.error?.message || error.message || '').toLowerCase();
+    const errCode = (error.response?.data?.error?.code || '').toLowerCase();
     
-    // Check if error is due to quota/billing (429) or invalid auth key (401/403)
-    if (status === 429 || status === 401 || status === 403 || errMsg.includes('rate limit') || errMsg.includes('quota') || errMsg.includes('invalid api key') || errMsg.includes('exceeded')) {
-      SystemSettings.updateOne({ key: 'global_settings' }, { chatKeyStatus: 'exhausted' }).catch(() => {});
+    // Only flag as exhausted if the key is rejected (401) or truly quota-depleted (insufficient_quota / billing)
+    const isAuthFailure = status === 401 || errMsg.includes('invalid api key') || errCode === 'invalid_api_key';
+    const isHardQuotaExhausted = (status === 429 && (errMsg.includes('quota') || errMsg.includes('insufficient_quota') || errCode === 'insufficient_quota'));
+
+    if (isAuthFailure || isHardQuotaExhausted) {
+      const currentKey = await getGroqChatApiKey().catch(() => '');
+      SystemSettings.updateOne(
+        { key: 'global_settings' }, 
+        { 
+          chatKeyStatus: 'exhausted',
+          chatKeyExhaustedKey: currentKey
+        }
+      ).catch(() => {});
     }
 
     console.error('Error communicating with Groq in backend proxy:', error.response?.data || error.message);
