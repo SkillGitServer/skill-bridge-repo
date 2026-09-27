@@ -64,6 +64,13 @@ function SuperAdminDashboard() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [reviewActionLoadingId, setReviewActionLoadingId] = useState(null);
 
+  // Client Inquiries State
+  const [inquiriesList, setInquiriesList] = useState([]);
+  const [inquiriesCounts, setInquiriesCounts] = useState({ total: 0, unread: 0, read: 0 });
+  const [showInquiriesModal, setShowInquiriesModal] = useState(false);
+  const [isLoadingInquiries, setIsLoadingInquiries] = useState(false);
+  const [inquiryActionLoadingId, setInquiryActionLoadingId] = useState(null);
+
   // Read states for dynamic card highlights (resets when user clicks/opens card)
   const [readJobsCount, setReadJobsCount] = useState(() => Number(localStorage.getItem('supss_read_jobs') || 0));
   const [readApplicationsCount, setReadApplicationsCount] = useState(() => Number(localStorage.getItem('supss_read_applications') || 0));
@@ -394,12 +401,106 @@ function SuperAdminDashboard() {
     }
   };
 
+  const fetchInquiries = async () => {
+    try {
+      setIsLoadingInquiries(true);
+      const token = getAuthToken('supss');
+      const res = await axios.get('/api/super-admin/inquiries', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data && res.data.success) {
+        setInquiriesList(res.data.inquiries || []);
+        if (res.data.counts) {
+          setInquiriesCounts(res.data.counts);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch client inquiries:', err);
+    } finally {
+      setIsLoadingInquiries(false);
+    }
+  };
+
+  const handleMarkInquiryAsRead = async (inquiryId) => {
+    try {
+      setInquiryActionLoadingId(inquiryId);
+      const token = getAuthToken('supss');
+      const res = await axios.patch(
+        `/api/super-admin/inquiries/${inquiryId}/read`,
+        {},
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      if (res.data && res.data.success) {
+        setInquiriesList(prev =>
+          prev.map(item => item._id === inquiryId ? { ...item, isRead: true, readAt: new Date() } : item)
+        );
+        if (res.data.counts) {
+          setInquiriesCounts(res.data.counts);
+        } else {
+          setInquiriesCounts(prev => ({
+            ...prev,
+            unread: Math.max(0, prev.unread - 1),
+            read: prev.read + 1
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to mark inquiry as read:', err);
+    } finally {
+      setInquiryActionLoadingId(null);
+    }
+  };
+
+  const handleMarkAllInquiriesRead = async () => {
+    try {
+      setIsLoadingInquiries(true);
+      const token = getAuthToken('supss');
+      const res = await axios.post(
+        '/api/super-admin/inquiries/mark-all-read',
+        {},
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      if (res.data && res.data.success) {
+        toast.success('All client inquiries marked as read.');
+        setInquiriesList(prev => prev.map(item => ({ ...item, isRead: true, readAt: new Date() })));
+        setInquiriesCounts(prev => ({ ...prev, unread: 0, read: prev.total }));
+      }
+    } catch (err) {
+      console.error('Failed to mark all inquiries as read:', err);
+      toast.error('Failed to update inquiries.');
+    } finally {
+      setIsLoadingInquiries(false);
+    }
+  };
+
+  const handleDeleteInquiry = async (inquiryId) => {
+    if (!window.confirm('Are you sure you want to delete this inquiry?')) return;
+    try {
+      setInquiryActionLoadingId(inquiryId);
+      const token = getAuthToken('supss');
+      const res = await axios.delete(`/api/super-admin/inquiries/${inquiryId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data && res.data.success) {
+        toast.success('Inquiry deleted.');
+        setInquiriesList(prev => prev.filter(item => item._id !== inquiryId));
+        if (res.data.counts) setInquiriesCounts(res.data.counts);
+      }
+    } catch (err) {
+      console.error('Failed to delete inquiry:', err);
+      toast.error('Failed to delete inquiry.');
+    } finally {
+      setInquiryActionLoadingId(null);
+    }
+  };
+
   useEffect(() => {
     fetchUploadLogs();
     fetchCommunications();
     fetchRetentionSettings();
     fetchGroqKeySettings();
     fetchReviews();
+    fetchInquiries();
   }, []);
 
   useEffect(() => {
@@ -478,7 +579,8 @@ function SuperAdminDashboard() {
         fetchRetentionSettings().catch(() => null),
         fetchGroqKeySettings().catch(() => null),
         fetchBackupStatus().catch(() => null),
-        fetchReviews().catch(() => null)
+        fetchReviews().catch(() => null),
+        fetchInquiries().catch(() => null)
       ]);
 
       const statsRes = results[0];
@@ -921,6 +1023,45 @@ function SuperAdminDashboard() {
             <p className="text-[10px] text-gray-500 font-extrabold mt-4 flex items-center justify-between">
               <span>{reviewCounts?.submitted || reviewCounts?.approved || 0} Submitted • {reviewCounts?.pending || 0} Pending</span>
               <span className="text-amber-600 font-black">Manage Reviews →</span>
+            </p>
+          </div>
+
+          {/* 11. Client Inquiries / Contact Desk Card */}
+          <div
+            onClick={() => setShowInquiriesModal(true)}
+            className={`${inquiriesCounts.unread > 0
+              ? 'bg-blue-50/90 border-2 border-blue-500 shadow-lg shadow-blue-100/50'
+              : 'bg-white/80 backdrop-blur-lg border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
+              } rounded-2xl p-5 md:p-6 flex flex-col justify-between relative cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all group`}
+          >
+            {inquiriesCounts.unread > 0 ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-300 text-[10px] font-black uppercase tracking-wider mb-2 self-start animate-pulse">
+                📬 {inquiriesCounts.unread} New Inquir{inquiriesCounts.unread > 1 ? 'ies' : 'y'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase tracking-wider mb-2 self-start">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                ALL INQUIRIES READ
+              </span>
+            )}
+            <span className="absolute top-5 right-5 text-xl opacity-70 group-hover:scale-110 transition-transform">
+              {inquiriesCounts.unread > 0 ? '📬' : '💬'}
+            </span>
+            <div>
+              <span className={`text-xs font-extrabold uppercase tracking-wider block ${
+                inquiriesCounts.unread > 0 ? 'text-blue-600' : 'text-gray-500'
+              }`}>
+                Client Relations
+              </span>
+              <h3 className="text-2xl md:text-3xl font-black tracking-tight mt-2 text-gray-900 leading-none">
+                Client Inquiries
+              </h3>
+            </div>
+            <p className="text-[10px] text-gray-500 font-extrabold mt-4 flex items-center justify-between">
+              <span>{inquiriesCounts.total} Received • {inquiriesCounts.unread} Unread</span>
+              <span className={`${inquiriesCounts.unread > 0 ? 'text-blue-600' : 'text-gray-600'} font-black`}>
+                View Inquiries →
+              </span>
             </p>
           </div>
         </div>
@@ -1630,6 +1771,163 @@ function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveModalUser(null)}
                 className="w-full bg-gray-900 hover:bg-gray-800 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Client Inquiries Detail Modal */}
+      {showInquiriesModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-2xl border border-white/60 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl animate-in fade-in zoom-in duration-150 relative flex flex-col max-h-[85vh]">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-150">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg">
+                  📬
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-black text-gray-900 leading-tight">
+                    Client Inquiries Desk
+                  </h3>
+                  <p className="text-xs text-gray-500 font-semibold mt-0.5">
+                    Live contact messages received directly from the website
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {inquiriesCounts.unread > 0 && (
+                  <button
+                    onClick={handleMarkAllInquiriesRead}
+                    disabled={isLoadingInquiries}
+                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs rounded-xl transition-all border border-blue-200 cursor-pointer shadow-xs active:scale-95"
+                    title="Mark all inquiries as read"
+                  >
+                    ✓ Mark All Read
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowInquiriesModal(false)}
+                  className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Inquiries List */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+              {isLoadingInquiries && inquiriesList.length === 0 ? (
+                <div className="text-center py-12 text-sm text-gray-400 font-semibold">
+                  Loading inquiries...
+                </div>
+              ) : inquiriesList.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 font-semibold space-y-2">
+                  <span className="text-3xl block">📭</span>
+                  <p className="text-sm">No client inquiries received yet.</p>
+                  <p className="text-xs text-gray-400">
+                    New inquiries submitted via the Contact form will appear here in real-time.
+                  </p>
+                </div>
+              ) : (
+                inquiriesList.map((inq) => (
+                  <div
+                    key={inq._id}
+                    className={`rounded-2xl p-4 md:p-5 border transition-all ${
+                      !inq.isRead
+                        ? 'bg-blue-50/70 border-blue-200 shadow-sm'
+                        : 'bg-gray-50/80 border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-black text-gray-900 text-sm">{inq.name}</h4>
+                          {!inq.isRead ? (
+                            <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              NEW
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[9px] font-bold uppercase tracking-wider">
+                              READ
+                            </span>
+                          )}
+                        </div>
+                        <a
+                          href={`mailto:${inq.email}?subject=Re: Skill Bridge India Inquiry`}
+                          className="text-xs text-blue-600 hover:underline font-mono block truncate mt-0.5"
+                        >
+                          {inq.email}
+                        </a>
+                      </div>
+
+                      <span className="text-[10px] text-gray-400 font-semibold whitespace-nowrap shrink-0">
+                        {inq.createdAt
+                          ? new Date(inq.createdAt).toLocaleString('en-IN', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : 'Recent'}
+                      </span>
+                    </div>
+
+                    {/* Message Box */}
+                    <div className="mt-3 p-3 bg-white rounded-xl border border-gray-150 text-xs text-gray-800 leading-relaxed whitespace-pre-wrap font-medium shadow-2xs">
+                      {inq.message}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-200/60">
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`mailto:${inq.email}?subject=Re: Skill Bridge Inquiry`}
+                          className="px-3 py-1.5 bg-gray-900 hover:bg-black text-white text-[11px] font-bold rounded-xl transition-all inline-flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <span>✉️ Reply to {inq.name.split(' ')[0]}</span>
+                        </a>
+
+                        {!inq.isRead && (
+                          <button
+                            onClick={() => handleMarkInquiryAsRead(inq._id)}
+                            disabled={inquiryActionLoadingId === inq._id}
+                            className="px-3 py-1.5 bg-white hover:bg-gray-100 text-blue-700 border border-blue-200 text-[11px] font-bold rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                          >
+                            {inquiryActionLoadingId === inq._id ? 'Updating...' : 'Mark Read'}
+                          </button>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteInquiry(inq._id)}
+                        disabled={inquiryActionLoadingId === inq._id}
+                        className="px-2.5 py-1 text-gray-400 hover:text-red-600 text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                        title="Delete inquiry"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-gray-150 flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-semibold">
+                Total: {inquiriesCounts.total} • Unread: {inquiriesCounts.unread}
+              </span>
+              <button
+                onClick={() => setShowInquiriesModal(false)}
+                className="px-5 py-2 bg-gray-900 hover:bg-black text-white font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
               >
                 Close
               </button>
