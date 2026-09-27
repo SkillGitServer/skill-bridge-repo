@@ -31,6 +31,7 @@ function Login() {
   const [lastName, setLastName] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showOtpForm, setShowOtpForm] = useState(false);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [isOtpLoading, setIsOtpLoading] = useState(false);
@@ -110,6 +111,7 @@ function Login() {
   useEffect(() => {
     setStep(1);
     setError('');
+    setShowOtpForm(false);
   }, [location.pathname]);
 
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -463,9 +465,9 @@ function Login() {
 
 
           {step === 1 ? (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {isLoginMode ? (
-                /* ── 1. LOGIN SCREEN: Google Primary, Request OTP Optional/Secondary Beneath ── */
+                /* ── 1. LOGIN SCREEN: Google Primary, Request OTP Collapsed by Default ── */
                 <>
                   {/* Primary Prominent Action: Google Sign-In */}
                   <button
@@ -487,50 +489,53 @@ function Login() {
                     </span>
                   </button>
 
-                  {/* Divider */}
-                  <div className="flex items-center my-4">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="px-3 text-gray-400 text-[10px] font-black uppercase tracking-widest bg-white/80 rounded-full py-0.5 border border-gray-100 shadow-2xs">
-                      or sign in with email OTP
-                    </span>
-                    <div className="flex-grow border-t border-gray-200"></div>
-                  </div>
+                  {/* Collapsed OTP Form: Shown only when requested */}
+                  {showOtpForm && (
+                    <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex items-center my-2">
+                        <div className="flex-grow border-t border-gray-200"></div>
+                        <span className="px-3 text-gray-400 text-[10px] font-black uppercase tracking-widest bg-white/80 rounded-full py-0.5 border border-gray-100 shadow-2xs">
+                          or sign in with email OTP
+                        </span>
+                        <div className="flex-grow border-t border-gray-200"></div>
+                      </div>
 
-                  {/* Standard Form: Email Address & Secondary Request OTP Button */}
-                  <form onSubmit={handleRequestOtp} noValidate className="space-y-4">
-                    <div className="space-y-1.5 text-left">
-                      <label htmlFor="identifier" className="text-sm font-bold text-gray-700">Email Address</label>
-                      <input
-                        id="identifier"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                        placeholder="name@example.com"
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
-                      />
+                      <form onSubmit={handleRequestOtp} noValidate className="space-y-4">
+                        <div className="space-y-1.5 text-left">
+                          <label htmlFor="identifier" className="text-sm font-bold text-gray-700">Email Address</label>
+                          <input
+                            id="identifier"
+                            name="email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            placeholder="name@example.com"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isOtpLoading}
+                          className="w-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-full font-bold text-sm sm:text-base transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]"
+                        >
+                          {isOtpLoading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
+                              <span>Sending code...</span>
+                            </>
+                          ) : (
+                            <span>Request OTP</span>
+                          )}
+                        </button>
+                      </form>
                     </div>
-
-                    <button
-                      type="submit"
-                      disabled={isOtpLoading}
-                      className="w-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-full font-bold text-sm sm:text-base transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]"
-                    >
-                      {isOtpLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
-                          <span>Sending code...</span>
-                        </>
-                      ) : (
-                        <span>Request OTP</span>
-                      )}
-                    </button>
-                  </form>
+                  )}
                 </>
               ) : (
-                /* ── 2. REGISTRATION SCREEN: Google Primary, Mandatory Terms & Standard OTP Option ── */
+                /* ── 2. REGISTRATION SCREEN: Google Primary, Mandatory Terms & Collapsed OTP Form ── */
                 <>
                   {/* Mandatory Terms & Conditions Checkbox */}
                   <div className={`p-3 rounded-2xl border text-left transition-all ${
@@ -554,7 +559,7 @@ function Login() {
                           href="/terms"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-bold text-gray-900 underline hover:text-black"
+                          className="font-bold text-gray-900 underline hover:text-black outline-none focus:outline-none"
                         >
                           Terms and Conditions
                         </a>{' '}
@@ -586,97 +591,123 @@ function Login() {
                     </span>
                   </button>
 
-                  {/* Divider */}
-                  <div className="flex items-center my-4">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="px-3 text-gray-400 text-[10px] font-black uppercase tracking-widest bg-white/80 rounded-full py-0.5 border border-gray-100 shadow-2xs">
-                      or register with email OTP
-                    </span>
-                    <div className="flex-grow border-t border-gray-200"></div>
-                  </div>
-
-                  {/* Standard Registration Form */}
-                  <form onSubmit={handleRequestOtp} noValidate className="space-y-4">
-                    {/* First & Last Name */}
-                    <div className="grid grid-cols-2 gap-3 text-left">
-                      <div className="space-y-1">
-                        <label htmlFor="firstName" className="text-xs sm:text-sm font-bold text-gray-700">First name</label>
-                        <input
-                          id="firstName"
-                          name="firstName"
-                          type="text"
-                          required
-                          autoComplete="given-name"
-                          placeholder="First name"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
-                        />
+                  {/* Collapsed Registration Form: Shown only when requested */}
+                  {showOtpForm && (
+                    <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex items-center my-2">
+                        <div className="flex-grow border-t border-gray-200"></div>
+                        <span className="px-3 text-gray-400 text-[10px] font-black uppercase tracking-widest bg-white/80 rounded-full py-0.5 border border-gray-100 shadow-2xs">
+                          or register with email OTP
+                        </span>
+                        <div className="flex-grow border-t border-gray-200"></div>
                       </div>
-                      <div className="space-y-1">
-                        <label htmlFor="lastName" className="text-xs sm:text-sm font-bold text-gray-700">Last name</label>
-                        <input
-                          id="lastName"
-                          name="lastName"
-                          type="text"
-                          required
-                          autoComplete="family-name"
-                          placeholder="Last name"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Email Address */}
-                    <div className="space-y-1 text-left">
-                      <label htmlFor="identifier" className="text-xs sm:text-sm font-bold text-gray-700">Email Address</label>
-                      <input
-                        id="identifier"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                        placeholder="name@example.com"
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
-                      />
-                    </div>
+                      <form onSubmit={handleRequestOtp} noValidate className="space-y-4">
+                        {/* First & Last Name */}
+                        <div className="grid grid-cols-2 gap-3 text-left">
+                          <div className="space-y-1">
+                            <label htmlFor="firstName" className="text-xs sm:text-sm font-bold text-gray-700">First name</label>
+                            <input
+                              id="firstName"
+                              name="firstName"
+                              type="text"
+                              required
+                              autoComplete="given-name"
+                              placeholder="First name"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label htmlFor="lastName" className="text-xs sm:text-sm font-bold text-gray-700">Last name</label>
+                            <input
+                              id="lastName"
+                              name="lastName"
+                              type="text"
+                              required
+                              autoComplete="family-name"
+                              placeholder="Last name"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
+                            />
+                          </div>
+                        </div>
 
-                    {/* Secondary Action Button: Register with Email OTP */}
-                    <button
-                      type="submit"
-                      disabled={isOtpLoading}
-                      className="w-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-full font-bold text-sm sm:text-base transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]"
-                    >
-                      {isOtpLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
-                          <span>Sending code...</span>
-                        </>
-                      ) : (
-                        <span>Register with Email OTP</span>
-                      )}
-                    </button>
-                  </form>
+                        {/* Email Address */}
+                        <div className="space-y-1 text-left">
+                          <label htmlFor="identifier" className="text-xs sm:text-sm font-bold text-gray-700">Email Address</label>
+                          <input
+                            id="identifier"
+                            name="email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            placeholder="name@example.com"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors text-sm"
+                          />
+                        </div>
+
+                        {/* Secondary Action Button: Register with Email OTP */}
+                        <button
+                          type="submit"
+                          disabled={isOtpLoading}
+                          className="w-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-black text-gray-800 py-3.5 rounded-full font-bold text-sm sm:text-base transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]"
+                        >
+                          {isOtpLoading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
+                              <span>Sending code...</span>
+                            </>
+                          ) : (
+                            <span>Register with Email OTP</span>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </>
               )}
 
-              {/* Footer Toggle */}
-              <p className="text-center text-gray-500 mt-6 text-sm">
-                {isLoginMode ? "Don't have an account? " : "Already have an account? "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate(isLoginMode ? '/register' : '/login');
-                  }}
-                  className="font-bold text-gray-900 hover:underline cursor-pointer"
-                >
-                  {isLoginMode ? "Register" : "Login"}
-                </button>
-              </p>
+              {/* Footer Area: Toggle Login/Register & Collapsible OTP Option */}
+              <div className="text-center mt-6 space-y-2">
+                <p className="text-center text-gray-500 text-sm">
+                  {isLoginMode ? "Don't have an account? " : "Already have an account? "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(isLoginMode ? '/register' : '/login');
+                    }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    style={{ outline: 'none', boxShadow: 'none', WebkitTapHighlightColor: 'transparent' }}
+                    className="font-bold text-gray-900 hover:underline cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none border-0 bg-transparent p-0 select-none inline"
+                  >
+                    {isLoginMode ? "Register" : "Login"}
+                  </button>
+                </p>
+
+                {/* Direct text link to toggle OTP registration / login */}
+                <p className="text-center text-sm pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowOtpForm(!showOtpForm)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    style={{ outline: 'none', boxShadow: 'none', WebkitTapHighlightColor: 'transparent' }}
+                    className="font-bold text-gray-900 hover:underline cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none border-0 bg-transparent p-0 select-none inline"
+                  >
+                    {showOtpForm ? (
+                      <span className="text-xs text-gray-500 hover:text-black font-semibold">Hide OTP options ▲</span>
+                    ) : isLoginMode ? (
+                      "Sign in with OTP"
+                    ) : (
+                      "Register with OTP"
+                    )}
+                  </button>
+                </p>
+              </div>
             </div>
           ) : (
             /* Step 2: OTP Verification */

@@ -98,6 +98,16 @@ body, html {
   background-color: transparent;
 }
 
+/* ─── Remove default browser focus outline rectangle on click ─── */
+button:focus,
+button:focus-visible,
+a:focus,
+a:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 /* ─── Client Security & Text Selection Restrictions ────────────────── */
 body, * {
   -webkit-user-select: none !important;
