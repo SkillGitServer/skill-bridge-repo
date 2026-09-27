@@ -25,11 +25,38 @@ if (typeof Node === 'function' && Node.prototype) {
   };
 }
 
-// Register Service Worker for Offline Shell & PWA Resilience
+// Register Service Worker for Offline Shell & PWA Resilience with immediate update detection
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('[SW REGISTRATION WARNING]', err);
+    navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then((registration) => {
+        // Check for updates on every page load
+        registration.update().catch(() => {});
+
+        // Listen for new worker installed
+        registration.addEventListener('updatefound', () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.addEventListener('statechange', () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[SW] New version detected and ready to activate.');
+              }
+            });
+          }
+        });
+      })
+      .catch((err) => {
+        console.warn('[SW REGISTRATION WARNING]', err);
+      });
+
+    // Seamlessly reload to serve the freshest live assets when a new worker takes control
+    let isRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        window.location.reload();
+      }
     });
   });
 }

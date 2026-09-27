@@ -24,6 +24,11 @@ function androidAssetsPlugin() {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const urlPath = req.url ? req.url.split('?')[0] : '';
+        if (urlPath === '/sw.js' || urlPath === '/index.html' || urlPath === '/') {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
         const targetFile = apkMappings[urlPath];
         if (targetFile && fs.existsSync(targetFile)) {
           res.setHeader('Content-Type', 'application/vnd.android.package-archive');

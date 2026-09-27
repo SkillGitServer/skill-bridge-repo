@@ -194,7 +194,8 @@ function AppRoutes() {
 
   const showInstallBanner =
     location.pathname !== '/' &&
-    !location.pathname.startsWith('/dev-override');
+    !location.pathname.startsWith('/dev-override') &&
+    !location.pathname.startsWith('/download');
 
   if (!isOnline) {
     return <OfflinePage onRetry={checkConnection} isChecking={isChecking} />;
@@ -355,10 +356,7 @@ function AppRoutes() {
       )}
 
       {showInstallBanner && (
-        <InstallBanner
-          installPromptEvent={installPromptEvent}
-          triggerInstall={triggerInstall}
-        />
+        <InstallBanner />
       )}
     </>
     </PWARouteGuard>

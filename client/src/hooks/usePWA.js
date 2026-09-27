@@ -97,15 +97,11 @@ export const usePWA = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  const triggerInstall = async () => {
-    if (installPromptEvent) {
-      installPromptEvent.prompt();
-      const { outcome } = await installPromptEvent.userChoice;
-      if (outcome === 'accepted') {
-        setInstallPromptEvent(null);
-      }
+  const triggerInstall = () => {
+    if (typeof window !== 'undefined') {
+      window.location.assign('/download');
     }
   };
 
-  return { installPromptEvent, triggerInstall };
+  return { installPromptEvent: null, triggerInstall };
 };

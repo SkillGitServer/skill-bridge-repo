@@ -331,21 +331,9 @@ function StudentDashboard() {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setIsInstallable(false);
-      }
-      setDeferredPrompt(null);
-    } else {
-      // Fallback manual instructions for iOS or desktop browsers
-      toast('To install, tap your browser menu (or Share) and select "Add to Home Screen".', {
-        icon: '📲',
-        duration: 6000,
-      });
-      setIsDismissed(true);
+  const handleInstallClick = () => {
+    if (typeof window !== 'undefined') {
+      window.location.assign('/download/spark');
     }
   };
 
