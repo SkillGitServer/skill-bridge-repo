@@ -7,7 +7,7 @@ const axios = require('axios');
  * @param {Object} options - { to, subject, html, text }
  * @returns {Promise<boolean>}
  */
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, replyTo }) => {
   const apiKey = (process.env.BREVO_API_KEY || process.env.SMTP_PASS || '').trim();
   const senderEmail = (process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@skillbridge.in').trim();
   const senderName = (process.env.BREVO_SENDER_NAME || 'Skill Bridge India').trim();
@@ -25,6 +25,10 @@ const sendEmail = async ({ to, subject, html }) => {
     subject: subject,
     htmlContent: html
   };
+
+  if (replyTo) {
+    payload.replyTo = typeof replyTo === 'string' ? { email: replyTo } : replyTo;
+  }
 
   try {
     if (!apiKey) {
@@ -306,8 +310,156 @@ const sendAdminResetOtpEmail = async (userEmail, otpCode, role = 'admin') => {
   return sendEmail({ to: userEmail, subject, html });
 };
 
+/**
+ * Template C: Contact Us Form Inquiry Notification
+ * Dispatches inquiries submitted from the website Contact page directly to mail.skillbridgeindia@gmail.com
+ */
+const sendContactInquiryEmail = async ({ name, email, message }) => {
+  const targetEmail = 'mail.skillbridgeindia@gmail.com';
+  const subject = `[Skill Bridge Inquiry] Message from ${name}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Contact Inquiry - Skill Bridge India</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          background-color: #f8fafc;
+          margin: 0;
+          padding: 0;
+          color: #1e293b;
+        }
+        .wrapper {
+          max-width: 580px;
+          margin: 36px auto;
+          background: #ffffff;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+          border: 1px solid #e2e8f0;
+        }
+        .header {
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          padding: 32px;
+          text-align: center;
+        }
+        .header h1 {
+          color: #ffffff;
+          margin: 0;
+          font-size: 22px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+        }
+        .header p {
+          color: #f59e0b;
+          font-size: 12px;
+          margin: 6px 0 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          font-weight: 700;
+        }
+        .body {
+          padding: 36px 32px;
+        }
+        .field {
+          margin-bottom: 22px;
+        }
+        .label {
+          font-size: 11px;
+          font-weight: 800;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 6px;
+        }
+        .value {
+          font-size: 15px;
+          color: #0f172a;
+          background: #f1f5f9;
+          padding: 12px 16px;
+          border-radius: 12px;
+          font-weight: 600;
+        }
+        .message-box {
+          font-size: 15px;
+          line-height: 1.6;
+          color: #0f172a;
+          background: #f8fafc;
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          white-space: pre-wrap;
+          font-family: inherit;
+        }
+        .reply-container {
+          text-align: center;
+          margin-top: 28px;
+        }
+        .btn-reply {
+          display: inline-block;
+          padding: 12px 28px;
+          background-color: #0f172a;
+          color: #ffffff !important;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 14px;
+          border-radius: 9999px;
+        }
+        .footer {
+          background-color: #f8fafc;
+          padding: 20px;
+          text-align: center;
+          border-top: 1px solid #f1f5f9;
+          font-size: 12px;
+          color: #94a3b8;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="header">
+          <h1>Skill Bridge India</h1>
+          <p>New Contact Form Inquiry</p>
+        </div>
+        <div class="body">
+          <div class="field">
+            <div class="label">Sender Name</div>
+            <div class="value">${name}</div>
+          </div>
+          <div class="field">
+            <div class="label">Sender Email</div>
+            <div class="value"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></div>
+          </div>
+          <div class="field">
+            <div class="label">Message</div>
+            <div class="message-box">${message}</div>
+          </div>
+          <div class="reply-container">
+            <a href="mailto:${email}?subject=Re: Your inquiry to Skill Bridge India" class="btn-reply">Reply to ${name}</a>
+          </div>
+        </div>
+        <div class="footer">
+          Received from Skill Bridge India Contact Page &bull; ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: targetEmail,
+    subject,
+    html,
+    replyTo: { email, name }
+  });
+};
+
 module.exports = {
   sendEmail,
   sendStudentOtpEmail,
-  sendAdminResetOtpEmail
+  sendAdminResetOtpEmail,
+  sendContactInquiryEmail
 };

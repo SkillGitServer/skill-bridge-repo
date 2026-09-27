@@ -1,8 +1,14 @@
-const { sendEmail, sendStudentOtpEmail, sendAdminResetOtpEmail } = require('./sendEmail');
+const { 
+  sendEmail, 
+  sendStudentOtpEmail, 
+  sendAdminResetOtpEmail,
+  sendContactInquiryEmail 
+} = require('./sendEmail');
 
 module.exports = {
   sendEmail,
   sendOtpEmail: sendStudentOtpEmail,
   sendStudentOtpEmail,
-  sendAdminResetOtpEmail
+  sendAdminResetOtpEmail,
+  sendContactInquiryEmail
 };

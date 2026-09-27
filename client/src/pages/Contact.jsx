@@ -1,22 +1,52 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import Navbar from '../components/shared/Navbar';
 import Footer from '../components/shared/Footer';
 import RandomBlobs from '../components/shared/RandomBlobs';
-import { Mail, MapPin, Send } from 'lucide-react';
+import { Mail, MapPin, Send, Phone, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { API_BASE_URL } from '../utils/api';
 
 function Contact() {
   useDocumentTitle("Contact Us | Skill Bridge India");
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(''); // '', 'sending', 'success', 'error'
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      return;
+    }
+
     setStatus('sending');
-    setTimeout(() => {
-      setStatus('success');
-      setFormData({ name: '', email: '', message: '' });
-    }, 1000);
+    setErrorMessage('');
+
+    try {
+      const baseUrl = (API_BASE_URL || '').replace(/\/+$/, '');
+      const response = await axios.post(`${baseUrl}/api/contact`, {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        message: formData.message.trim()
+      });
+
+      if (response.status === 200 && response.data?.success) {
+        setStatus('success');
+        setFormData({ name: '', email: '', message: '' });
+        setTimeout(() => {
+          setStatus('');
+        }, 6000);
+      } else {
+        setStatus('error');
+        setErrorMessage(response.data?.error || 'Failed to send message. Please try again.');
+      }
+    } catch (err) {
+      console.error('[CONTACT SUBMIT ERROR]', err);
+      setStatus('error');
+      setErrorMessage(
+        err.response?.data?.error || 'Unable to deliver message right now. Please try again or email us directly at mail.skillbridgeindia@gmail.com'
+      );
+    }
   };
 
   return (
@@ -45,8 +75,27 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Email us</h3>
-                  <a href="mailto:hello@skillhub.in" className="text-gray-600 hover:text-black transition-colors font-medium">
-                    hello@skillhub.in
+                  <a
+                    href="mailto:mail.skillbridgeindia@gmail.com"
+                    className="text-gray-600 hover:text-black transition-colors font-medium break-all"
+                  >
+                    mail.skillbridgeindia@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              {/* Phone Block */}
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Phone size={22} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Call us</h3>
+                  <a
+                    href="tel:+919371717215"
+                    className="text-gray-600 hover:text-black transition-colors font-medium"
+                  >
+                    +919371717215
                   </a>
                 </div>
               </div>
@@ -124,15 +173,39 @@ function Contact() {
                   />
                 </div>
 
+                {status === 'success' && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2 text-emerald-800 text-sm font-semibold">
+                    <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
+                    <span>Thank you! Your message has been sent to our team.</span>
+                  </div>
+                )}
+
+                {status === 'error' && errorMessage && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2 text-red-800 text-sm font-semibold">
+                    <AlertCircle size={18} className="text-red-600 flex-shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={status === 'sending'}
-                  className="w-full py-3.5 bg-gray-900 hover:bg-black text-white font-bold rounded-full transition-all shadow-md flex items-center justify-center space-x-2 text-sm"
+                  className={`w-full py-3.5 font-bold rounded-full transition-all shadow-md flex items-center justify-center space-x-2 text-sm disabled:opacity-60 ${
+                    status === 'success'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-gray-900 hover:bg-black text-white'
+                  }`}
                 >
                   {status === 'sending' ? (
-                    <span>Sending...</span>
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Sending...</span>
+                    </>
                   ) : status === 'success' ? (
-                    <span>Message Sent Successfully!</span>
+                    <>
+                      <CheckCircle size={16} />
+                      <span>Message Sent Successfully!</span>
+                    </>
                   ) : (
                     <>
                       <span>Send Message</span>

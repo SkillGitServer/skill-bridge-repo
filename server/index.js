@@ -16,6 +16,7 @@ const systemRoutes = require('./routes/systemRoutes');
 const landingRoutes = require('./routes/landingRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 const path = require('path');
@@ -67,6 +68,8 @@ app.use('/', systemRoutes);
 app.use('/', landingRoutes);
 app.use('/', jobRoutes);
 app.use('/', reviewRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/', contactRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
