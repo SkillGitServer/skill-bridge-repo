@@ -179,8 +179,18 @@ export async function copyForGoogleSheets(headers, rows) {
 }
 
 /**
+ * Helper to check if a document URL is an image (JPG, PNG, WebP, GIF, SVG)
+ */
+export function isDocumentImage(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return false;
+  const clean = rawUrl.split('?')[0].trim().toLowerCase();
+  return /\.(jpe?g|png|webp|gif|bmp|svg)$/i.test(clean);
+}
+
+/**
  * Helper to ensure Cloudinary PDF URLs open seamlessly in a new browser tab using Google Docs Viewer.
  * Cleans double extension issues (e.g. .pdf.pdf) and returns the encoded Google Docs Viewer URL.
+ * If the file is an image, returns the direct URL without passing through Google Docs Viewer.
  */
 export function getInlineResumeUrl(rawUrl) {
   if (!rawUrl || typeof rawUrl !== 'string') return '';
@@ -190,12 +200,12 @@ export function getInlineResumeUrl(rawUrl) {
   // Fix double extension issues if present (e.g. .pdf.pdf -> .pdf)
   cleanUrl = cleanUrl.replace(/\.pdf\.pdf$/i, '.pdf');
 
-  // If already a Google Docs Viewer URL, return as-is
-  if (cleanUrl.startsWith('https://docs.google.com/viewer')) {
+  // If already a Google Docs Viewer URL or is an image, return cleanUrl directly
+  if (cleanUrl.startsWith('https://docs.google.com/viewer') || isDocumentImage(cleanUrl)) {
     return cleanUrl;
   }
 
-  // Pass through Google Docs Viewer for seamless in-browser PDF rendering across all devices & browsers
+  // Pass through Google Docs Viewer for seamless in-browser PDF rendering across devices
   return `https://docs.google.com/viewer?url=${encodeURIComponent(cleanUrl)}&embedded=true`;
 }
 

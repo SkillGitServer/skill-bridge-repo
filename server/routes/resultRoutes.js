@@ -6,50 +6,7 @@ const { Readable } = require('stream');
 const ExamResult = require('../models/ExamResult');
 const Student = require('../models/Student');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
-
-// Helper function to map answer values (indexes or strings or single letters A-F) to actual option text
-function formatAnswerText(ansVal, optionsArray) {
-  if (ansVal === null || ansVal === undefined || ansVal === '') {
-    return 'Not Answered / Skipped';
-  }
-
-  const strVal = String(ansVal).trim();
-
-  // 1. If single letter A, B, C, D, E, F
-  if (/^[A-F]$/i.test(strVal)) {
-    const letterIdx = ['A', 'B', 'C', 'D', 'E', 'F'].indexOf(strVal.toUpperCase());
-    if (letterIdx !== -1 && Array.isArray(optionsArray) && optionsArray[letterIdx]) {
-      const optText = optionsArray[letterIdx];
-      const optStr = typeof optText === 'object' ? (optText.text || JSON.stringify(optText)) : String(optText);
-      if (/^[A-F][\.\)\s]/i.test(optStr.trim())) {
-        return optStr;
-      }
-      return `${strVal.toUpperCase()}. ${optStr}`;
-    }
-  }
-
-  // 2. If ansVal is numeric index 0-9
-  const idxNum = Number(strVal);
-  if (!isNaN(idxNum) && idxNum >= 0 && idxNum <= 9) {
-    if (Array.isArray(optionsArray) && optionsArray[idxNum]) {
-      const optText = optionsArray[idxNum];
-      const optPrefix = ['A', 'B', 'C', 'D', 'E', 'F'][idxNum] || `${idxNum + 1}`;
-      const optStr = typeof optText === 'object' ? (optText.text || JSON.stringify(optText)) : String(optText);
-      if (/^[A-F][\.\)\s]/i.test(optStr.trim())) {
-        return optStr;
-      }
-      return `${optPrefix}. ${optStr}`;
-    }
-    const letters = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E', 'Option F'];
-    return letters[idxNum] || `Option ${idxNum + 1}`;
-  }
-
-  if (typeof ansVal === 'object') {
-    return ansVal.text || ansVal.answer || JSON.stringify(ansVal);
-  }
-
-  return String(ansVal);
-}
+const { findBankQuestion, getDistinctOptions, formatAnswerText } = require('../utils/questionBank');
 
 // Helper function to render PDF contents (Page 1 summary + Page 2+ detailed breakdown)
 function renderPdfContents(doc, result) {
@@ -301,28 +258,50 @@ function renderPdfContents(doc, result) {
 
   doc.y = 95;
 
+  // ── Retrieve Exact Attempted Questions (Strict 1-to-1 Mapping to Student's Actual Attempt) ──
   let qList = [];
   if (Array.isArray(result.questionsDetailed) && result.questionsDetailed.length > 0) {
+    // Strictly use questions recorded in the student's actual attempt
     qList = result.questionsDetailed;
+  } else if (Array.isArray(result.questionIds) && result.questionIds.length > 0) {
+    // Strictly map by explicit question_ids recorded for this student's attempt
+    qList = result.questionIds.map((qRef, idx) => {
+      const qId = typeof qRef === 'object' ? (qRef.question_id || qRef.id || qRef._id) : qRef;
+      const bankQ = findBankQuestion({ question_id: qId });
+      if (bankQ) {
+        return {
+          question_id: bankQ.id || qId,
+          questionText: bankQ.question || bankQ.questionText,
+          options: bankQ.options,
+          correctAnswer: bankQ.correctAnswer,
+          explanation: bankQ.explanation
+        };
+      }
+      return {
+        question_id: qId,
+        questionText: `Assessment Question ${idx + 1} (${qId})`
+      };
+    });
   } else {
+    // Fallback: If attempt record lacks itemized question details, render clear evaluation item summary
     const total = result.totalQuestions || 10;
     const correct = result.correctAnswers || 0;
     for (let i = 0; i < total; i++) {
       const isCorrect = i < correct;
       qList.push({
-        questionText: `Core Competency Assessment Question ${i + 1} (${result.examTitle || 'Domain Evaluation'})`,
-        userAnswer: isCorrect ? 'Option A: Demonstrated Correct Conceptual Solution' : 'Option B: Incorrect Method / Attempted Strategy',
-        correctAnswer: 'Option A: Demonstrated Correct Conceptual Solution',
-        explanation: `Standard domain guidelines for ${result.examTitle || 'Skill Evaluation'} require systematic analysis and precision. Option A represents the optimal approach.`,
+        questionText: `Core Assessment Competency Item ${i + 1} (${result.examTitle || 'Domain Evaluation'})`,
+        userAnswer: isCorrect ? 'Demonstrated Correct Method' : 'Incorrect Method / Strategy',
+        correctAnswer: 'Demonstrated Correct Method',
+        explanation: `Standard competency criteria for ${result.examTitle || 'Domain Evaluation'} apply to this evaluation metric.`,
         isCorrect: isCorrect,
-        points: isCorrect ? 10 : -2
+        points: isCorrect ? (result.isMentorExam ? 5 : 2) : (result.isMentorExam ? -10 : -2)
       });
     }
   }
 
   qList.forEach((q, index) => {
-    // ── Pagination Check: Ensure question block does not truncate at page bottom ──
-    if (doc.y > 630) {
+    // ── Pagination Check: Ensure question block does not truncate awkwardly at page bottom ──
+    if (doc.y > 580) {
       doc.addPage();
       doc.fillColor('#9ca3af')
          .font('Helvetica-Bold')
@@ -340,7 +319,15 @@ function renderPdfContents(doc, result) {
 
     const isCorrect = q.isCorrect === true || (q.points && q.points > 0);
 
-    // 1. Heading: "Question X:" (Bold, size 11)
+    // ── 1. Strictly Link to Authoritative Subject Question Bank (No Random Questions) ──
+    const qId = q.question_id || q.questionId || q.id || q._id;
+    const qText = q.questionText || q.question || '';
+    const bankQuestion = findBankQuestion({ question_id: qId, questionText: qText });
+
+    // ── 2. Distinct Options Mapping (Fixes Option Duplication for A, B, C, D) ──
+    const distinctOptions = getDistinctOptions(q, bankQuestion);
+
+    // 1. Heading: "Question X:"
     doc.font('Helvetica-Bold')
        .fontSize(11)
        .fillColor('#111111')
@@ -361,17 +348,40 @@ function renderPdfContents(doc, result) {
 
     doc.moveDown(0.35);
 
-    // 3. The Question Text (Full text, word-wrapped)
-    const qText = q.questionText || q.question || `Question ${index + 1}`;
+    // 3. Question Text: Strictly the question the student saw and answered
+    const displayQuestionText = (bankQuestion && (bankQuestion.question || bankQuestion.questionText)) || qText || `Question ${index + 1}`;
     doc.font('Helvetica')
        .fontSize(9.5)
        .fillColor('#1f2937')
-       .text(qText, 50, doc.y, { width: 500, lineGap: 3 });
+       .text(displayQuestionText, 50, doc.y, { width: 500, lineGap: 3 });
 
-    doc.moveDown(0.45);
+    doc.moveDown(0.35);
 
-    // 4. Your Answer: [Actual Option Text]
-    const uAnsFormatted = formatAnswerText(q.userAnswer, q.options);
+    // ── 4. Distinct Options Block: Renders Choices A, B, C, D with their Unique Text ──
+    if (Array.isArray(distinctOptions) && distinctOptions.length > 0) {
+      const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      distinctOptions.forEach((optText, optIdx) => {
+        if (!optText) return;
+        const optLetter = optionLetters[optIdx] || `${optIdx + 1}`;
+        // Clean off any redundant prefix if optText already starts with "A. " or "Option A: "
+        const cleanOpt = String(optText).replace(new RegExp(`^(?:Option\\s+)?${optLetter}[\\.\\)\\:\\s]+`, 'i'), '').trim();
+
+        doc.font('Helvetica-Bold')
+           .fontSize(8.5)
+           .fillColor('#64748b')
+           .text(`    (${optLetter}) `, 50, doc.y, { continued: true })
+           .font('Helvetica')
+           .fillColor('#334155')
+           .text(cleanOpt, { width: 480, lineGap: 2 });
+
+        doc.moveDown(0.18);
+      });
+
+      doc.moveDown(0.25);
+    }
+
+    // 5. Your Answer: [Actual Distinct Option Text]
+    const uAnsFormatted = formatAnswerText(q.userAnswer, distinctOptions);
     const ansColor = isCorrect ? '#059669' : '#dc2626';
 
     doc.font('Helvetica-Bold')
@@ -382,10 +392,11 @@ function renderPdfContents(doc, result) {
        .fillColor(ansColor)
        .text(uAnsFormatted, { width: 500, lineGap: 2 });
 
-    doc.moveDown(0.35);
+    doc.moveDown(0.3);
 
-    // 5. Correct Answer: [Actual Option Text]
-    const cAnsFormatted = formatAnswerText(q.correctAnswer || q.answer, q.options);
+    // 6. Correct Answer: [Actual Distinct Option Text]
+    const resolvedCorrect = q.correctAnswer || (bankQuestion && (bankQuestion.correctAnswer || bankQuestion.answer)) || q.answer;
+    const cAnsFormatted = formatAnswerText(resolvedCorrect, distinctOptions);
 
     doc.font('Helvetica-Bold')
        .fontSize(9)
@@ -395,10 +406,10 @@ function renderPdfContents(doc, result) {
        .fillColor('#059669')
        .text(cAnsFormatted, { width: 500, lineGap: 2 });
 
-    doc.moveDown(0.35);
+    doc.moveDown(0.3);
 
-    // 6. Explanation: [Explanation Text]
-    const expText = q.explanation || q.rationale || 'Detailed conceptual evaluation and core competencies applied.';
+    // 7. Explanation: [Authoritative Explanatory Rationale]
+    const expText = q.explanation || (bankQuestion && bankQuestion.explanation) || q.rationale || 'Detailed conceptual evaluation and core competencies applied.';
     doc.font('Helvetica-Oblique')
        .fontSize(9)
        .fillColor('#4b5563')
@@ -407,9 +418,9 @@ function renderPdfContents(doc, result) {
        .fillColor('#6b7280')
        .text(expText, { width: 500, lineGap: 2 });
 
-    doc.moveDown(0.6);
+    doc.moveDown(0.55);
 
-    // 7. Divider Line across the page before starting Question X+1
+    // 8. Divider Line across the page before starting Question X+1
     const dividerY = doc.y + 4;
     doc.strokeColor('#cbd5e1')
        .lineWidth(1)
@@ -424,7 +435,7 @@ function renderPdfContents(doc, result) {
 // Helper function to generate Exam Result PDF in-memory and upload to Cloudinary
 async function generateAndUploadExamResultPdf(result, forceRegenerate = false) {
   if (!result) return null;
-  if (!forceRegenerate && result.pdfUrl && typeof result.pdfUrl === 'string' && result.pdfUrl.includes('_v6_')) {
+  if (!forceRegenerate && result.pdfUrl && typeof result.pdfUrl === 'string' && result.pdfUrl.includes('_v7_')) {
     return result.pdfUrl;
   }
 
@@ -440,7 +451,7 @@ async function generateAndUploadExamResultPdf(result, forceRegenerate = false) {
             const uploadStream = cloudinary.uploader.upload_stream(
               {
                 folder: 'career_bridge_docs',
-                public_id: `exam_report_v6_${result._id || Date.now()}`,
+                public_id: `exam_report_v7_${result._id || Date.now()}`,
                 resource_type: 'auto'
               },
               (err, res) => {
@@ -488,9 +499,9 @@ router.get('/api/results', async (req, res) => {
     }
     const results = await ExamResult.find(filter).sort({ date: -1 }).lean();
 
-    // Check & generate/update Cloudinary PDF URL to latest v6 format
+    // Check & generate/update Cloudinary PDF URL to latest v7 format
     for (const r of results) {
-      if (!r.pdfUrl || !r.pdfUrl.includes('_v6_')) {
+      if (!r.pdfUrl || !r.pdfUrl.includes('_v7_')) {
         const cldUrl = await generateAndUploadExamResultPdf(r, true);
         if (cldUrl) r.pdfUrl = cldUrl;
       }
@@ -742,8 +753,8 @@ router.get('/api/results/pdf/:id', async (req, res) => {
       }
     }
 
-    // Check if pdfUrl is stored in latest _v6_ format
-    const isLatestVersion = result.pdfUrl && typeof result.pdfUrl === 'string' && result.pdfUrl.includes('_v6_');
+    // Check if pdfUrl is stored in latest _v7_ format
+    const isLatestVersion = result.pdfUrl && typeof result.pdfUrl === 'string' && result.pdfUrl.includes('_v7_');
 
     if (isLatestVersion && req.query.force !== 'true') {
       return res.redirect(result.pdfUrl);
@@ -833,5 +844,8 @@ router.post('/api/admin/clear-failed-insights', verifyToken, requireRole('admin'
     res.status(500).json({ error: 'Failed to clear insights records.' });
   }
 });
+
+router.renderPdfContents = renderPdfContents;
+router.generateAndUploadExamResultPdf = generateAndUploadExamResultPdf;
 
 module.exports = router;

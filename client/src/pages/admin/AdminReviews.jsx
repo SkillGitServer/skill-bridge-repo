@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useAdminRefresh } from '../../components/admin/AdminRefresh';
 import AdminHeader from '../../components/admin/AdminHeader';
 import { getAuthToken, logoutUser } from '../../utils/auth';
-import { getInlineResumeUrl } from '../../utils/exportUtils';
+import { getInlineResumeUrl, isDocumentImage } from '../../utils/exportUtils';
 
 function AdminReviews() {
   useDocumentTitle('Student Docs Queue | Skill Bridge India');
@@ -24,6 +24,7 @@ function AdminReviews() {
 
   // Modal State for viewing student documents in-app
   const [viewingDoc, setViewingDoc] = useState(null); // { title, studentName, url }
+  const [docViewMode, setDocViewMode] = useState('direct'); // 'direct' | 'google'
 
   const fetchReviews = async () => {
     setIsLoading(true);
@@ -400,49 +401,124 @@ function AdminReviews() {
 
       {/* ── In-App Document Viewer Modal ── */}
       {viewingDoc && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 z-50 animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden text-left">
+        <div className="fixed inset-0 bg-slate-900/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 z-50 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden text-left">
             
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-800/90 border-b border-slate-700/80 flex items-center justify-between shrink-0">
+            <div className="px-5 py-3.5 bg-slate-800/95 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-lg">
-                  📄
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-lg shrink-0">
+                  {isDocumentImage(viewingDoc.url) ? '🖼️' : '📄'}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-base font-extrabold text-white truncate">
+                  <h3 className="text-sm sm:text-base font-extrabold text-white truncate">
                     {viewingDoc.title} — {viewingDoc.studentName}
                   </h3>
-                  <p className="text-xs text-slate-400 font-medium">In-App Document Viewer</p>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    {isDocumentImage(viewingDoc.url) ? 'Image Preview' : 'In-App Document Viewer'}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                {/* Switch between Direct View and Google Docs Viewer for PDFs */}
+                {!isDocumentImage(viewingDoc.url) && (
+                  <div className="flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-700/60 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setDocViewMode('direct')}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                        docViewMode === 'direct'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Direct Viewer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDocViewMode('google')}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                        docViewMode === 'google'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Google Viewer
+                    </button>
+                  </div>
+                )}
+
                 <a
                   href={viewingDoc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-bold transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-xs"
                 >
-                  <span>🔗</span> Open Original
+                  <span>🔗</span> <span>Open Original</span>
                 </a>
                 <button
                   type="button"
-                  onClick={() => setViewingDoc(null)}
+                  onClick={() => {
+                    setViewingDoc(null);
+                    setDocViewMode('direct');
+                  }}
                   className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+                  title="Close Viewer"
                 >
                   ✕
                 </button>
               </div>
             </div>
 
-            {/* Modal Body: Google Docs PDF/Image Viewer Iframe */}
-            <div className="flex-1 w-full bg-slate-950 p-2 sm:p-4 relative">
-              <iframe
-                src={getInlineResumeUrl(viewingDoc.url)}
-                className="w-full h-full rounded-2xl border border-slate-800 bg-white"
-                title={`${viewingDoc.title} - ${viewingDoc.studentName}`}
-              />
+            {/* Modal Body */}
+            <div className="flex-1 w-full bg-slate-950 p-2 sm:p-4 relative flex flex-col overflow-hidden">
+              {isDocumentImage(viewingDoc.url) ? (
+                /* Native Image Viewer */
+                <div className="w-full h-full flex items-center justify-center overflow-auto bg-slate-900/60 rounded-2xl p-4 border border-slate-800">
+                  <img
+                    src={viewingDoc.url}
+                    alt={`${viewingDoc.title} - ${viewingDoc.studentName}`}
+                    className="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+                  />
+                </div>
+              ) : docViewMode === 'direct' ? (
+                /* Direct Native PDF Object / Embed */
+                <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 bg-white">
+                  <object
+                    data={viewingDoc.url}
+                    type="application/pdf"
+                    className="w-full h-full"
+                  >
+                    <iframe
+                      src={viewingDoc.url}
+                      className="w-full h-full"
+                      title={`${viewingDoc.title} - ${viewingDoc.studentName}`}
+                    >
+                      <div className="p-8 text-center bg-slate-900 text-white h-full flex flex-col items-center justify-center">
+                        <p className="text-sm text-slate-300 mb-3">Your browser cannot render this PDF directly.</p>
+                        <a
+                          href={viewingDoc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs"
+                        >
+                          Open PDF in New Window
+                        </a>
+                      </div>
+                    </iframe>
+                  </object>
+                </div>
+              ) : (
+                /* Google Docs Viewer Iframe */
+                <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 bg-white">
+                  <iframe
+                    src={getInlineResumeUrl(viewingDoc.url)}
+                    className="w-full h-full"
+                    title={`${viewingDoc.title} - ${viewingDoc.studentName}`}
+                  />
+                </div>
+              )}
             </div>
 
           </div>

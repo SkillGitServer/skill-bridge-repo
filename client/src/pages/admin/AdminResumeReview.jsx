@@ -173,7 +173,7 @@ function AdminResumeReview() {
   };
 
   const fullPdfUrl = getFullResumeUrl(resumeUrl);
-  const streamUrl = resumeUrl ? getInlineResumeUrl(resumeUrl) : (studentId ? `/api/resume/pdf-stream/${studentId}` : '');
+  const streamUrl = resumeUrl || (studentId ? `/api/resume/pdf-stream/${studentId}` : '');
   
   const { RefreshButton, RefreshOverlay } = useAdminRefresh();
 
