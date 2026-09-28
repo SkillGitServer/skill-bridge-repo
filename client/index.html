@@ -10,16 +10,22 @@
     <!-- Dynamic PWA Manifest & Icon Loader -->
     <script>
       (function() {
+        // Global listener to capture PWA install prompt early
+        window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault();
+          window.deferredPrompt = e;
+        });
+
         var p = window.location.pathname;
         var m = null;
         var icon = '/logo.png';
-        if (p.indexOf('/admin') === 0) {
+        if (p.indexOf('/admin') === 0 || p.indexOf('/download/vault') === 0 || p.indexOf('/download/admin') === 0) {
           m = '/manifest-admin.json';
           icon = '/adm-icon.png';
-        } else if (p.indexOf('/sudo-control-panel') === 0 || p.indexOf('/super-admin') === 0 || p.indexOf('/super_admin') === 0) {
+        } else if (p.indexOf('/sudo-control-panel') === 0 || p.indexOf('/super-admin') === 0 || p.indexOf('/super_admin') === 0 || p.indexOf('/download/supss') === 0 || p.indexOf('/download/super-admin') === 0) {
           m = '/manifest-superadmin.json';
           icon = '/sup-icon.png';
-        } else if (p.indexOf('/student') === 0 || p.indexOf('/register') === 0 || p.indexOf('/login') === 0 || p.indexOf('/dashboard') === 0) {
+        } else if (p.indexOf('/student') === 0 || p.indexOf('/register') === 0 || p.indexOf('/login') === 0 || p.indexOf('/dashboard') === 0 || p.indexOf('/download') === 0) {
           m = '/manifest-student.json';
           icon = '/stu-icon.png';
         }

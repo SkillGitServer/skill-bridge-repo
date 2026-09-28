@@ -79,6 +79,17 @@ function PWARouteGuard({ children }) {
     ) {
       manifestUrl = '/manifest-student.json';
       iconUrl = '/stu-icon.png';
+    } else if (path.startsWith('/download')) {
+      if (path.includes('vault') || path.includes('admin')) {
+        manifestUrl = '/manifest-admin.json';
+        iconUrl = '/adm-icon.png';
+      } else if (path.includes('supss') || path.includes('super-admin')) {
+        manifestUrl = '/manifest-superadmin.json';
+        iconUrl = '/sup-icon.png';
+      } else {
+        manifestUrl = '/manifest-student.json';
+        iconUrl = '/stu-icon.png';
+      }
     }
 
     // Attach or remove PWA manifest tag

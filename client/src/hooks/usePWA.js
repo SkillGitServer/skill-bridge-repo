@@ -60,6 +60,17 @@ export const usePWA = () => {
     ) {
       manifestName = 'manifest-student.json';
       iconPath = '/stu-icon.png';
+    } else if (location.pathname.startsWith('/download')) {
+      if (location.pathname.includes('vault') || location.pathname.includes('admin')) {
+        manifestName = 'manifest-admin.json';
+        iconPath = '/adm-icon.png';
+      } else if (location.pathname.includes('supss') || location.pathname.includes('super-admin')) {
+        manifestName = 'manifest-superadmin.json';
+        iconPath = '/sup-icon.png';
+      } else {
+        manifestName = 'manifest-student.json';
+        iconPath = '/stu-icon.png';
+      }
     }
 
     // Update or remove manifest link dynamically
@@ -92,6 +103,9 @@ export const usePWA = () => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setInstallPromptEvent(e);
+      if (typeof window !== 'undefined') {
+        window.deferredPrompt = e;
+      }
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -103,5 +117,5 @@ export const usePWA = () => {
     }
   };
 
-  return { installPromptEvent: null, triggerInstall };
+  return { installPromptEvent: installPromptEvent || (typeof window !== 'undefined' ? window.deferredPrompt : null), triggerInstall };
 };

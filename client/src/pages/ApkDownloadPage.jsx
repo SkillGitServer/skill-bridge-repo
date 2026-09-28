@@ -14,7 +14,8 @@ import {
   PlusSquare, 
   Monitor, 
   ExternalLink, 
-  X 
+  X,
+  Loader2 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import logo from '/logo.png';
@@ -105,6 +106,9 @@ export default function ApkDownloadPage() {
   const [copied, setCopied] = useState(false);
   const [downloadStarted, setDownloadStarted] = useState(false);
 
+  // Active installing indicator: { appId: string, platform: 'windows' | 'apple' } | null
+  const [installingTarget, setInstallingTarget] = useState(null);
+
   // Modal state for PWA guidance (Windows / Apple)
   const [activeModal, setActiveModal] = useState(null); // { type: 'windows' | 'apple', app: object }
 
@@ -145,63 +149,112 @@ export default function ApkDownloadPage() {
     setTimeout(() => setDownloadStarted(false), 4000);
   };
 
-  // Windows PWA Install Trigger
+  // Windows PWA Install Trigger: Tries direct native installation first
   const handleWindowsInstall = async (app) => {
-    // Dynamically point manifest to target app
-    const manifestLink = document.querySelector('link[rel="manifest"]');
-    if (manifestLink && app.manifest) {
+    setInstallingTarget({ appId: app.id, platform: 'windows' });
+
+    // 1. Dynamically ensure target app's manifest is injected and updated
+    let manifestLink = document.getElementById('pwa-manifest-link') || document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.id = 'pwa-manifest-link';
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+    }
+    if (app.manifest) {
       manifestLink.href = app.manifest;
     }
 
-    const promptObj = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPrompt : null);
+    // 2. Check if already running in standalone app mode
+    const isStandalone = typeof window !== 'undefined' && (
+      window.matchMedia('(display-mode: standalone)').matches || 
+      window.navigator.standalone === true
+    );
+    if (isStandalone) {
+      toast.success(`${app.name.replace(' (APK)', '')} is already installed on your system!`);
+      setInstallingTarget(null);
+      return;
+    }
+
+    // 3. Attempt direct prompt with browser's beforeinstallprompt event
+    let promptObj = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPrompt : null);
+
+    // If not immediately available, give browser 300ms to yield
+    if (!promptObj) {
+      await new Promise((res) => setTimeout(res, 300));
+      promptObj = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPrompt : null);
+    }
 
     if (promptObj) {
       try {
         await promptObj.prompt();
         const choice = await promptObj.userChoice;
+        setInstallingTarget(null);
+
         if (choice && choice.outcome === 'accepted') {
-          toast.success(`${app.name} is installing on your Windows device!`);
+          toast.success(`${app.name.replace(' (APK)', '')} is installing on your Windows desktop! Check your Start Menu.`);
           setDeferredPrompt(null);
           if (typeof window !== 'undefined') window.deferredPrompt = null;
+          return; // Directly installed! No modal needed!
+        } else {
+          toast.info('Installation prompt dismissed.');
           return;
         }
       } catch (err) {
-        console.warn('Install prompt error:', err);
+        console.warn('Direct install prompt error:', err);
       }
     }
 
-    // If deferredPrompt is unavailable (already installed or unsupported), show guided Windows modal
+    // 4. If direct prompt cannot be triggered by the browser (scope restriction or browser policy):
+    setInstallingTarget(null);
+    toast.info('Direct prompt not provided by browser — opening 1-click guide', { icon: 'ℹ️' });
     setActiveModal({ type: 'windows', app });
   };
 
-  // Apple iOS / macOS Install Trigger
+  // Apple iOS / macOS Install Trigger: Checks compatibility then opens Apple guide
   const handleAppleInstall = async (app) => {
+    setInstallingTarget({ appId: app.id, platform: 'apple' });
+
+    // 1. Dynamically ensure target app's manifest is injected
+    let manifestLink = document.getElementById('pwa-manifest-link') || document.querySelector('link[rel="manifest"]');
+    if (!manifestLink) {
+      manifestLink = document.createElement('link');
+      manifestLink.id = 'pwa-manifest-link';
+      manifestLink.rel = 'manifest';
+      document.head.appendChild(manifestLink);
+    }
+    if (app.manifest) {
+      manifestLink.href = app.manifest;
+    }
+
     const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
     const isMac = typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-    const promptObj = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPrompt : null);
-
-    // If on macOS desktop with Chrome/Edge supporting programmatic install
+    // 2. If on macOS desktop running Chrome/Edge supporting direct prompt
+    let promptObj = deferredPrompt || (typeof window !== 'undefined' ? window.deferredPrompt : null);
     if (isMac && !isIOS && promptObj) {
       try {
-        const manifestLink = document.querySelector('link[rel="manifest"]');
-        if (manifestLink && app.manifest) {
-          manifestLink.href = app.manifest;
-        }
         await promptObj.prompt();
         const choice = await promptObj.userChoice;
+        setInstallingTarget(null);
+
         if (choice && choice.outcome === 'accepted') {
-          toast.success(`${app.name} is installing on macOS!`);
+          toast.success(`${app.name.replace(' (APK)', '')} is installing on macOS!`);
           setDeferredPrompt(null);
           if (typeof window !== 'undefined') window.deferredPrompt = null;
+          return; // Directly installed! No modal needed!
+        } else {
+          toast.info('Installation prompt dismissed.');
           return;
         }
       } catch (err) {
-        console.warn('Install prompt error:', err);
+        console.warn('Direct install prompt error:', err);
       }
     }
 
-    // On iOS Safari / iPadOS or Safari Mac, open clean Apple guide modal
+    // 3. Apple Safari on iOS / macOS does not support programmatic prompt by OS design
+    await new Promise((res) => setTimeout(res, 250));
+    setInstallingTarget(null);
     setActiveModal({ type: 'apple', app });
   };
 
@@ -308,19 +361,41 @@ export default function ApkDownloadPage() {
               <div className="grid grid-cols-2 gap-2.5 w-full">
                 <button
                   type="button"
+                  disabled={installingTarget?.appId === selectedApp.id}
                   onClick={() => handleWindowsInstall(selectedApp)}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-60"
+                  title={`Install ${selectedApp.name.replace(' (APK)', '')} on Windows (PWA)`}
                 >
-                  <WindowsIcon className="w-4 h-4 fill-current text-sky-400" />
-                  <span>Windows</span>
+                  {installingTarget?.appId === selectedApp.id && installingTarget?.platform === 'windows' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                      <span>Trying Install...</span>
+                    </>
+                  ) : (
+                    <>
+                      <WindowsIcon className="w-4 h-4 fill-current text-sky-400" />
+                      <span>Windows</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
+                  disabled={installingTarget?.appId === selectedApp.id}
                   onClick={() => handleAppleInstall(selectedApp)}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-60"
+                  title={`Install ${selectedApp.name.replace(' (APK)', '')} on iOS / Mac`}
                 >
-                  <Apple className="w-4 h-4 text-slate-300" />
-                  <span>iOS / Mac</span>
+                  {installingTarget?.appId === selectedApp.id && installingTarget?.platform === 'apple' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-300" />
+                      <span>Checking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Apple className="w-4 h-4 text-slate-300" />
+                      <span>iOS / Mac</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -398,23 +473,43 @@ export default function ApkDownloadPage() {
                       {/* Button 2: Windows */}
                       <button
                         type="button"
+                        disabled={installingTarget?.appId === app.id}
                         onClick={() => handleWindowsInstall(app)}
-                        className="w-full py-2 px-2.5 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95"
-                        title={`Install ${app.name} on Windows (PWA)`}
+                        className="w-full py-2 px-2.5 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95 disabled:opacity-60"
+                        title={`Install ${app.name.replace(' (APK)', '')} on Windows (PWA)`}
                       >
-                        <WindowsIcon className="w-3.5 h-3.5 fill-current shrink-0 text-sky-400" />
-                        <span>Windows</span>
+                        {installingTarget?.appId === app.id && installingTarget?.platform === 'windows' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
+                            <span>Trying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <WindowsIcon className="w-3.5 h-3.5 fill-current shrink-0 text-sky-400" />
+                            <span>Windows</span>
+                          </>
+                        )}
                       </button>
 
                       {/* Button 3: Apple (iOS / Mac) */}
                       <button
                         type="button"
+                        disabled={installingTarget?.appId === app.id}
                         onClick={() => handleAppleInstall(app)}
-                        className="w-full py-2 px-2.5 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95"
-                        title={`Install ${app.name} on iOS / Mac`}
+                        className="w-full py-2 px-2.5 rounded-xl font-bold text-xs bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/80 hover:border-slate-500 text-slate-200 hover:text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer active:scale-95 disabled:opacity-60"
+                        title={`Install ${app.name.replace(' (APK)', '')} on iOS / Mac`}
                       >
-                        <Apple className="w-3.5 h-3.5 shrink-0 text-slate-300" />
-                        <span>iOS / Mac</span>
+                        {installingTarget?.appId === app.id && installingTarget?.platform === 'apple' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-300" />
+                            <span>Checking...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Apple className="w-3.5 h-3.5 shrink-0 text-slate-300" />
+                            <span>iOS / Mac</span>
+                          </>
+                        )}
                       </button>
                     </div>
 
@@ -529,31 +624,31 @@ export default function ApkDownloadPage() {
               <div className="space-y-4">
                 <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300">
                   <p className="font-semibold text-white mb-1 flex items-center gap-1.5">
-                    <WindowsIcon className="w-4 h-4 text-sky-400 fill-current" /> Windows Desktop Installation
+                    <WindowsIcon className="w-4 h-4 text-sky-400 fill-current" /> Direct Prompt Withheld by Browser
                   </p>
                   <p className="text-slate-400">
-                    Install {activeModal.app.name.replace(' (APK)', '')} as a native desktop application in Google Chrome or Microsoft Edge:
+                    Direct installation was attempted, but Google Chrome / Microsoft Edge requires a 1-click manual confirmation from the address bar or app portal:
                   </p>
                 </div>
 
                 <div className="space-y-2.5">
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700/60">
                     <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-400/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Monitor className="w-3.5 h-3.5" />
+                      <Download className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">1. Open in Chrome or Edge</p>
-                      <p className="text-[11px] text-slate-400">Launch Microsoft Edge or Google Chrome on your Windows PC.</p>
+                      <p className="text-xs font-bold text-white">1. Address Bar Install Icon (⊕)</p>
+                      <p className="text-[11px] text-slate-400">Look at the right side of the browser URL address bar at the very top and click <strong>Install App</strong>.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-700/60">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Download className="w-3.5 h-3.5" />
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">2. Click the App Install Icon (⊕)</p>
-                      <p className="text-[11px] text-slate-400">Look at the right side of the browser URL address bar and click <strong>Install App</strong>.</p>
+                      <p className="text-xs font-bold text-white">2. Or Open App Portal Directly</p>
+                      <p className="text-[11px] text-slate-400">Opening the portal directly triggers Chrome's native in-app install banner automatically.</p>
                     </div>
                   </div>
 
@@ -576,7 +671,7 @@ export default function ApkDownloadPage() {
                     rel="noopener noreferrer"
                     className="flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
                   >
-                    <span>Launch {activeModal.app.portal}</span>
+                    <span>Launch & Install {activeModal.app.portal}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                   <button
