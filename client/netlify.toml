@@ -24,6 +24,26 @@
     X-Content-Type-Options = "nosniff"
 
 [[redirects]]
+  from = "/googled5924dc899a1ac07.html"
+  to = "/googled5924dc899a1ac07.html"
+  status = 200
+
+[[redirects]]
+  from = "/googlef0f759b38a9ec933.html"
+  to = "/googlef0f759b38a9ec933.html"
+  status = 200
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
