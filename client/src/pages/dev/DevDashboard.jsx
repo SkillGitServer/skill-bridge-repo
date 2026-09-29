@@ -19,6 +19,16 @@ function DevDashboard() {
   } = useSiteLock();
   
   React.useEffect(() => {
+    // Strictly prevent search engine crawlers from indexing the Dev Portal
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    const prevRobotsContent = metaRobots ? metaRobots.getAttribute('content') : 'index, follow';
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    metaRobots.setAttribute('content', 'noindex, nofollow, noarchive, nosnippet');
+
     const devPrefix = import.meta.env.VITE_DEV_ROUTE_PREFIX || 'secure-dev-portal-x97';
     window.history.replaceState(null, '', `/${devPrefix}/dashboard`);
 

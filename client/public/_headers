@@ -16,6 +16,24 @@
   Content-Type: application/json
   Access-Control-Allow-Origin: *
 
+/dev/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/dev-dashboard
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/sudo-control-panel
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/super-admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/super_admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
 /*
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff

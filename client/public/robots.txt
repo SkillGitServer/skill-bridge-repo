@@ -1,5 +1,29 @@
 User-agent: *
-Allow: /
+# Disallow ALL Developer Portal and System Control routes
+Disallow: /dev/
+Disallow: /dev
+Disallow: /dev-*
+Disallow: /*dev*
+Disallow: /secure-dev*
+Disallow: /sudo-control-panel
+
+# Disallow Internal Admin, Super Admin, and Student Management Portals
+Disallow: /admin/
+Disallow: /admin
+Disallow: /super-admin/
+Disallow: /super-admin
+Disallow: /super_admin/
+Disallow: /super_admin
+Disallow: /student/
+Disallow: /api/
+
+# Disallow URLs with secret keys, passcodes, or tokens
+Disallow: /*?*access=*
+Disallow: /*?*secret=*
+Disallow: /*?*key=*
+
+# Allow only public informational & onboarding pages
+Allow: /$
 Allow: /about
 Allow: /contact
 Allow: /privacy
@@ -7,12 +31,6 @@ Allow: /terms
 Allow: /login
 Allow: /register
 Allow: /download
-Disallow: /admin/
-Disallow: /super-admin/
-Disallow: /super_admin/
-Disallow: /sudo-control-panel
-Disallow: /student/
-Disallow: /dev/
-Disallow: /api/
+Allow: /download/
 
 Sitemap: https://official-skill-bridge-india.netlify.app/sitemap.xml
