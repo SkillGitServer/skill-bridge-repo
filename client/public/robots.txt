@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /login
+Allow: /register
+Allow: /download
+Disallow: /admin/
+Disallow: /super-admin/
+Disallow: /super_admin/
+Disallow: /sudo-control-panel
+Disallow: /student/
+Disallow: /dev/
+Disallow: /api/
+
+Sitemap: https://official-skill-bridge-india.netlify.app/sitemap.xml
