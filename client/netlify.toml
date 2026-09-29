@@ -23,15 +23,6 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
 
-[[redirects]]
-  from = "/googled5924dc899a1ac07.html"
-  to = "/googled5924dc899a1ac07.html"
-  status = 200
-
-[[redirects]]
-  from = "/googlef0f759b38a9ec933.html"
-  to = "/googlef0f759b38a9ec933.html"
-  status = 200
 
 [[redirects]]
   from = "/robots.txt"
