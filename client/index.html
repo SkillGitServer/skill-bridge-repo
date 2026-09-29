@@ -1,122 +1,146 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <title>Skill Bridge India | Online Assessment & Career Acceleration Platform</title>
-    <meta name="description" content="Skill Bridge India is a premier online assessment and career acceleration platform offering secure digital exams, AI ATS resume optimization, verified certifications, and corporate job opportunities." />
-    <meta name="keywords" content="Skill Bridge India, online assessment, career acceleration, ATS resume review, verified certificates, corporate jobs, student exams, digital testing" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://official-skill-bridge-india.netlify.app/" />
 
-    <!-- Open Graph / Facebook / LinkedIn -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://official-skill-bridge-india.netlify.app/" />
-    <meta property="og:title" content="Skill Bridge India | Online Assessment & Career Acceleration Platform" />
-    <meta property="og:description" content="Conduct secure digital exams, instant test grading, AI-powered ATS resume optimization, and direct corporate career opportunities." />
-    <meta property="og:image" content="https://official-skill-bridge-india.netlify.app/logo.png" />
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WCHSFLXM');</script>
+  <!-- End Google Tag Manager -->
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://official-skill-bridge-india.netlify.app/" />
-    <meta property="twitter:title" content="Skill Bridge India" />
-    <meta property="twitter:description" content="Conduct secure digital exams, instant test grading, AI ATS resume optimization, and direct corporate career opportunities." />
-    <meta property="twitter:image" content="https://official-skill-bridge-india.netlify.app/logo.png" />
+  <!-- Google Search Console Verification -->
+  <meta name="google-site-verification" content="31trzosNGzILm35FkWtPoJquhVEC3yIGrF0MhD166Ug" />
 
-    <!-- Dynamic PWA Manifest & Icon Loader -->
-    <script>
-      (function() {
-        // Global listener to capture PWA install prompt early
-        window.addEventListener('beforeinstallprompt', function(e) {
-          e.preventDefault();
-          window.deferredPrompt = e;
-        });
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Skill Bridge India | Online Assessment & Career Acceleration Platform</title>
+  <meta name="description"
+    content="Skill Bridge India is a premier online assessment and career acceleration platform offering secure digital exams, AI ATS resume optimization, verified certifications, and corporate job opportunities." />
+  <meta name="keywords"
+    content="Skill Bridge India, online assessment, career acceleration, verified certificates, corporate jobs, digital testing" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://official-skill-bridge-india.netlify.app/" />
 
-        var p = window.location.pathname;
-        var m = null;
-        var icon = '/logo.png';
-        if (p.indexOf('/admin') === 0 || p.indexOf('/download/vault') === 0 || p.indexOf('/download/admin') === 0) {
-          m = '/manifest-admin.json';
-          icon = '/adm-icon.png';
-        } else if (p.indexOf('/sudo-control-panel') === 0 || p.indexOf('/super-admin') === 0 || p.indexOf('/super_admin') === 0 || p.indexOf('/download/supss') === 0 || p.indexOf('/download/super-admin') === 0) {
-          m = '/manifest-superadmin.json';
-          icon = '/sup-icon.png';
-        } else if (p.indexOf('/student') === 0 || p.indexOf('/register') === 0 || p.indexOf('/login') === 0 || p.indexOf('/dashboard') === 0 || p.indexOf('/download') === 0) {
-          m = '/manifest-student.json';
-          icon = '/stu-icon.png';
-        }
-        
-        if (m) {
-          var l = document.createElement('link');
-          l.rel = 'manifest';
-          l.href = m;
-          l.id = 'pwa-manifest-link';
-          document.head.appendChild(l);
-        }
+  <!-- Open Graph / Facebook / LinkedIn -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://official-skill-bridge-india.netlify.app/" />
+  <meta property="og:title" content="Skill Bridge India | Online Assessment & Career Acceleration Platform" />
+  <meta property="og:description"
+    content="Conduct secure digital exams, instant test grading, AI-powered ATS resume optimization, and direct corporate career opportunities." />
+  <meta property="og:image" content="https://official-skill-bridge-india.netlify.app/logo.png" />
 
-        var fav = document.createElement('link');
-        fav.rel = 'icon';
-        fav.type = 'image/png';
-        fav.href = icon;
-        fav.id = 'pwa-favicon-link';
-        document.head.appendChild(fav);
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://official-skill-bridge-india.netlify.app/" />
+  <meta property="twitter:title" content="Skill Bridge India" />
+  <meta property="twitter:description"
+    content="Conduct secure digital exams, instant test grading, AI ATS resume optimization, and direct corporate career opportunities." />
+  <meta property="twitter:image" content="https://official-skill-bridge-india.netlify.app/logo.png" />
 
-        var touch = document.createElement('link');
-        touch.rel = 'apple-touch-icon';
-        touch.href = icon;
-        touch.id = 'pwa-apple-touch-link';
-        document.head.appendChild(touch);
-      })();
-    </script>
-  </head>
-  <body>
-    <div id="google_translate_element" style="display:none;"></div>
-    <div id="root"></div>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script type="text/javascript">
-      // Kill Vercel Toolbar & Feedback overlays if injected
-      (function() {
-        const removeVercelToolbar = () => {
-          const targets = document.querySelectorAll('#vercel-toolbar, [data-vercel-toolbar-root], [data-vercel-edit-mode-root], #vercel-live-feedback, div[id*="vercel-toolbar"]');
-          targets.forEach(el => el.remove());
-        };
-        const observer = new MutationObserver(removeVercelToolbar);
-        observer.observe(document.documentElement, { childList: true, subtree: true });
-        window.addEventListener('DOMContentLoaded', removeVercelToolbar);
-      })();
+  <!-- Dynamic PWA Manifest & Icon Loader -->
+  <script>
+    (function () {
+      // Global listener to capture PWA install prompt early
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.deferredPrompt = e;
+      });
 
-      // Pre-flight cleanup: if user explicitly selected English, ensure no rogue googtrans cookies persist
-      (function() {
-        try {
-          if (localStorage.getItem('preferred_language') === 'en') {
-            var host = window.location.hostname;
-            var hostParts = host.split('.');
-            var domains = ['', host, '.' + host];
-            for (var i = 0; i < hostParts.length - 1; i++) {
-              var parentDomain = hostParts.slice(i).join('.');
-              domains.push(parentDomain);
-              domains.push('.' + parentDomain);
-            }
-            var paths = ['/', window.location.pathname];
-            domains.forEach(function(d) {
-              paths.forEach(function(p) {
-                var domainAttr = d ? '; domain=' + d : '';
-                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=' + p + domainAttr;
-                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Max-Age=0; path=' + p + domainAttr;
-              });
-            });
-          }
-        } catch (e) {}
-      })();
-
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,mr', autoDisplay: false}, 'google_translate_element');
+      var p = window.location.pathname;
+      var m = null;
+      var icon = '/logo.png';
+      if (p.indexOf('/admin') === 0 || p.indexOf('/download/vault') === 0 || p.indexOf('/download/admin') === 0) {
+        m = '/manifest-admin.json';
+        icon = '/adm-icon.png';
+      } else if (p.indexOf('/sudo-control-panel') === 0 || p.indexOf('/super-admin') === 0 || p.indexOf('/super_admin') === 0 || p.indexOf('/download/supss') === 0 || p.indexOf('/download/super-admin') === 0) {
+        m = '/manifest-superadmin.json';
+        icon = '/sup-icon.png';
+      } else if (p.indexOf('/student') === 0 || p.indexOf('/register') === 0 || p.indexOf('/login') === 0 || p.indexOf('/dashboard') === 0 || p.indexOf('/download') === 0) {
+        m = '/manifest-student.json';
+        icon = '/stu-icon.png';
       }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+      if (m) {
+        var l = document.createElement('link');
+        l.rel = 'manifest';
+        l.href = m;
+        l.id = 'pwa-manifest-link';
+        document.head.appendChild(l);
+      }
+
+      var fav = document.createElement('link');
+      fav.rel = 'icon';
+      fav.type = 'image/png';
+      fav.href = icon;
+      fav.id = 'pwa-favicon-link';
+      document.head.appendChild(fav);
+
+      var touch = document.createElement('link');
+      touch.rel = 'apple-touch-icon';
+      touch.href = icon;
+      touch.id = 'pwa-apple-touch-link';
+      document.head.appendChild(touch);
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WCHSFLXM"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <div id="root"></div>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="text/javascript">
+    // Kill Vercel Toolbar & Feedback overlays if injected
+    (function () {
+      const removeVercelToolbar = () => {
+        const targets = document.querySelectorAll('#vercel-toolbar, [data-vercel-toolbar-root], [data-vercel-edit-mode-root], #vercel-live-feedback, div[id*="vercel-toolbar"]');
+        targets.forEach(el => el.remove());
+      };
+      const observer = new MutationObserver(removeVercelToolbar);
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      window.addEventListener('DOMContentLoaded', removeVercelToolbar);
+    })();
+
+    // Pre-flight cleanup: if user explicitly selected English, ensure no rogue googtrans cookies persist
+    (function () {
+      try {
+        if (localStorage.getItem('preferred_language') === 'en') {
+          var host = window.location.hostname;
+          var hostParts = host.split('.');
+          var domains = ['', host, '.' + host];
+          for (var i = 0; i < hostParts.length - 1; i++) {
+            var parentDomain = hostParts.slice(i).join('.');
+            domains.push(parentDomain);
+            domains.push('.' + parentDomain);
+          }
+          var paths = ['/', window.location.pathname];
+          domains.forEach(function (d) {
+            paths.forEach(function (p) {
+              var domainAttr = d ? '; domain=' + d : '';
+              document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=' + p + domainAttr;
+              document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Max-Age=0; path=' + p + domainAttr;
+            });
+          });
+        }
+      } catch (e) { }
+    })();
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({ pageLanguage: 'en', includedLanguages: 'en,mr', autoDisplay: false }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript"
+    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
